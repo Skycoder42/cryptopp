@@ -22,6 +22,9 @@ unset IS_ARM_EMBEDDED
 # Variables used in GNUmakefile-cross
 unset AOSP_FLAGS
 unset AOSP_SYSROOT
+unset AOSP_LD_SYSROOT
+unset AOSP_SYS_ARCH_INC
+unset AOSP_SYS_INC
 unset AOSP_STL_INC
 unset AOSP_STL_LIB
 unset AOSP_BITS_INC
@@ -43,20 +46,28 @@ if [ -z "${AOSP_TOOLCHAIN_SUFFIX-}" ]; then
 	AOSP_TOOLCHAIN_SUFFIX=4.9
 fi
 
-# Set AOSP_API to the API you want to use. 'armeabi' and 'armeabi-v7a' need
+# Set AOSP_API_VERSION to the API you want to use. 'armeabi' and 'armeabi-v7a' need
 #   API 3 (or above), 'mips' and 'x86' need API 9 (or above), etc.
-# AOSP_API="android-3"     # Android 1.5 and above
-# AOSP_API="android-4"     # Android 1.6 and above
-# AOSP_API="android-5"     # Android 2.0 and above
-# AOSP_API="android-8"     # Android 2.2 and above
-# AOSP_API="android-9"     # Android 2.3 and above
-# AOSP_API="android-14"    # Android 4.0 and above
-# AOSP_API="android-18"    # Android 4.3 and above
-# AOSP_API="android-19"    # Android 4.4 and above
-# AOSP_API="android-21"    # Android 5.0 and above
-# AOSP_API="android-23"    # Android 6.0 and above
+# AOSP_API_VERSION="3"     # Android 1.5 and above
+# AOSP_API_VERSION="4"     # Android 1.6 and above
+# AOSP_API_VERSION="5"     # Android 2.0 and above
+# AOSP_API_VERSION="8"     # Android 2.2 and above
+# AOSP_API_VERSION="9"     # Android 2.3 and above
+# AOSP_API_VERSION="14"    # Android 4.0 and above
+# AOSP_API_VERSION="18"    # Android 4.3 and above
+# AOSP_API_VERSION="19"    # Android 4.4 and above
+# AOSP_API_VERSION="21"    # Android 5.0 and above
+# AOSP_API_VERSION="23"    # Android 6.0 and above
+if [ -z "${AOSP_API_VERSION-}" ]; then
+	AOSP_API_VERSION="21"
+fi
+
 if [ -z "${AOSP_API-}" ]; then
-	AOSP_API="android-21"
+	AOSP_API="android-${AOSP_API_VERSION}"
+else
+	echo "WARNING: Using AOSP_API has been deprecated. Please use AOSP_API_VERSION instead."
+	echo "If you set for example AOSP_API=android-23 then now instead set AOSP_API_VERSION=23"
+	exit 1
 fi
 
 #####################################################################
@@ -167,6 +178,9 @@ esac
 
 #####################################################################
 
+# add missing android API version flag as of https://android.googlesource.com/platform/ndk.git/+/HEAD/docs/UnifiedHeaders.md
+AOSP_FLAGS="-D__ANDROID_API__=$AOSP_API_VERSION $AOSP_FLAGS"
+
 # GNUmakefile-cross expects these to be set. They are also used in the tests below.
 export IS_ANDROID=1
 export AOSP_FLAGS
@@ -179,6 +193,8 @@ export AS="$TOOLCHAIN_NAME-as"
 export AR="$TOOLCHAIN_NAME-ar"
 export RANLIB="$TOOLCHAIN_NAME-ranlib"
 export STRIP="$TOOLCHAIN_NAME-strip"
+export AOSP_SYS_ARCH_INC="$ANDROID_NDK_ROOT/sysroot/usr/include/$TOOLCHAIN_NAME"
+export AOSP_SYS_INC="$ANDROID_NDK_ROOT/sysroot/usr/include/"
 
 #####################################################################
 
@@ -265,7 +281,8 @@ fi
 
 # Android SYSROOT. It will be used on the command line with --sysroot
 #   http://android.googlesource.com/platform/ndk/+/ics-mr0/docs/STANDALONE-TOOLCHAIN.html
-export AOSP_SYSROOT="$ANDROID_NDK_ROOT/platforms/$AOSP_API/$AOSP_ARCH"
+export AOSP_SYSROOT="$ANDROID_NDK_ROOT/sysroot"
+export AOSP_LD_SYSROOT="$ANDROID_NDK_ROOT/platforms/$AOSP_API/$AOSP_ARCH"
 
 #####################################################################
 
@@ -367,7 +384,10 @@ if [ ! -z "$VERBOSE" ] && [ "$VERBOSE" != "0" ]; then
   echo "AOSP_ABI: $AOSP_ABI"
   echo "AOSP_API: $AOSP_API"
   echo "AOSP_SYSROOT: $AOSP_SYSROOT"
+  echo "AOSP_LD_SYSROOT: $AOSP_LD_SYSROOT"
   echo "AOSP_FLAGS: $AOSP_FLAGS"
+  echo "AOSP_SYS_ARCH_INC: $AOSP_SYS_ARCH_INC"
+  echo "AOSP_SYS_INC: $AOSP_SYS_INC"
   echo "AOSP_STL_INC: $AOSP_STL_INC"
   echo "AOSP_STL_LIB: $AOSP_STL_LIB"
   if [ ! -z "$AOSP_BITS_INC" ]; then
