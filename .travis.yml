@@ -13,9 +13,9 @@ osx_image: xcode9.1
 git:
   depth: 3
 
-compiler:
-  - clang
-  - gcc
+#compiler:
+  #- clang
+  #- gcc
 
 env:
   global:
@@ -24,6 +24,18 @@ env:
     - ANDROID_NDK=$HOME/android/sdk/ndk-bundle
     - ANDROID_SDK_ROOT=$ANDROID_HOME
     - ANDROID_NDK_ROOT=$ANDROID_NDK
+
+  #matrix:
+    #- BUILD_MODE="all"
+    #- BUILD_MODE="native"
+    #- BUILD_MODE="no-asm"
+    #- BUILD_MODE="debug"
+    #- BUILD_MODE="asan"
+    #- BUILD_MODE="ubsan"
+    #- BUILD_MODE="ios-arm"
+    #- BUILD_MODE="ios-arm64"
+    #- BUILD_MODE="ios-watch"
+    #- BUILD_MODE="ios-tv"
 
 matrix:
 
@@ -51,47 +63,38 @@ matrix:
 
   include:
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=armeabi
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=armeabi-v7a
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=armeabi-v7a-hard
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=armv7a-neon
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=aarch64
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=mipsel
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=mipsel64
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=x86
     - os: linux
-      compiler: gcc
       env:
         - BUILD_MODE=android
         - PLATFORM=x86_64
