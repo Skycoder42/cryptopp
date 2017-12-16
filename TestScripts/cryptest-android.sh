@@ -43,13 +43,20 @@ do
 					echo "$platform:$runtime ==> SUCCESSFUL" >> /tmp/build.log
 				else
 					echo "$platform:$runtime ==> FAILURE" >> /tmp/build.log
+					touch /tmp/build.failed
 				fi
 			)
 		else
 			echo
 			echo "$platform with $runtime not supported by Android"
+			echo "$platform:$runtime ==> FAILURE" >> /tmp/build.log
+			touch /tmp/build.failed
 		fi
 	done
 done
 
 cat /tmp/build.log
+# let the script fail if any of the builds failed
+if [ -f /tmp/build.failed ]; then
+	exit 1
+fi
