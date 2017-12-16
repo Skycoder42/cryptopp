@@ -10,7 +10,7 @@
 # See http://www.cryptopp.com/wiki/Android_(Command_Line) for more details
 # ====================================================================
 
-PLATFORMS=(armeabi armeabi-v7a armeabi-v7a-hard armv7a-neon aarch64 mipsel x86 x86_64)
+PLATFORMS=(armeabi armeabi-v7a armeabi-v7a-hard armv7a-neon aarch64 mipsel mipsel64 x86 x86_64)
 RUNTIMES=(gnu-static gnu-shared llvm-static llvm-shared stlport-static stlport-shared)
 for platform in ${PLATFORMS[@]}
 do
@@ -34,11 +34,20 @@ do
 			echo "Building for $platform using $runtime..."
 			echo
 
-			. ./setenv-android.sh "$platform" "$runtime"
-			make -f GNUmakefile-cross static dynamic cryptest.exe
+			# run in subshell to not keep any env vars
+			(
+				. ./setenv-android.sh "$platform" "$runtime"
+				make -f GNUmakefile-cross static dynamic cryptest.exe
+				echo
+				if [ "$?" -eq "0" ]; then
+					echo "==> BUILD SUCCESSFUL"
+				else
+					echo "==> BUILD FAILTURE"
+				fi
+			)
 		else
 			echo
-			echo "$platform not supported by Android"
+			echo "$platform with $runtime not supported by Android"
 		fi
 	done
 done
