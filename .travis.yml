@@ -5,10 +5,10 @@ os:
   - osx
 
 dist: trusty
-sudo: false
+sudo: required
 
 # OS X only supports one image. Use the latest.
-osx_image: xcode8.2
+osx_image: xcode9.1
 
 git:
   depth: 3
@@ -32,6 +32,7 @@ env:
     - BUILD_MODE="ios-arm64"
     - BUILD_MODE="ios-watch"
     - BUILD_MODE="ios-tv"
+    - BUILD_MODE="android" # TODO split up to have one build for each platform/runtime
 
 matrix:
 
@@ -61,6 +62,13 @@ matrix:
     - os: osx
       env: BUILD_MODE="ios-watch"
 
+
+before_install:
+  - |
+    if [[ "$BUILD_MODE" == "android" ]]; then
+        TestScripts/install-android.sh
+    fi
+
 script:
   - |
     if [[ "$BUILD_MODE" == "ios-arm" ]]; then
@@ -78,7 +86,10 @@ script:
     elif [[ "$BUILD_MODE" == "ios-tv" ]]; then
         cp ./TestScripts/setenv-ios.sh .
         . ./setenv-ios.sh tv
-        make -f GNUmakefile-cross -j  "$BUILD_JOBS"
+        make -f GNUmakefile-cross -j "$BUILD_JOBS"
+    elif [[ "$BUILD_MODE" == "android" ]]; then
+        cp ./TestScripts/setenv-android.sh .
+        TestScripts/cryptest-android.sh
     elif [[ "$BUILD_MODE" == "debug" ]]; then
         CXXFLAGS="-DDEBUG -g2 -O1" make -j "$BUILD_JOBS"
         ./cryptest.exe v
