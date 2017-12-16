@@ -12,11 +12,11 @@
 set +e
 
 if [ -z "${PLATFORM-}" ]; then
-	PLATFORMS=(armeabi armeabi-v7a armeabi-v7a-hard armv7a-neon aarch64 mipsel mipsel64 x86 x86_64)
+	PLATFORMS=(armeabi-v7a armv7a-hard armv7a-neon aarch64 mipsel mipsel64 x86 x86_64)
 else
 	PLATFORMS=(${PLATFORM})
 fi
-RUNTIMES=(gnu-static gnu-shared llvm-static llvm-shared stlport-static stlport-shared)
+RUNTIMES=(gnu-static gnu-shared stlport-static stlport-shared) #llvm-static llvm-shared
 for platform in ${PLATFORMS[@]}
 do
 	for runtime in ${RUNTIMES[@]}

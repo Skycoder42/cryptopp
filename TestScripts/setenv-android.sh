@@ -108,11 +108,8 @@ fi
 # https://developer.android.com/ndk/guides/abis.html
 case "$THE_ARCH" in
   arm|armv5|armv6|armv7|armeabi)
-	TOOLCHAIN_ARCH="arm-linux-androideabi"
-	TOOLCHAIN_NAME="arm-linux-androideabi"
-	AOSP_ABI="armeabi"
-	AOSP_ARCH="arch-arm"
-	AOSP_FLAGS="-march=armv5te -mtune=xscale -mthumb -msoft-float -funwind-tables -fexceptions -frtti"
+    echo armv5 and armv6 are not supported out of the box. Try to use armv7a-neon instead
+    exit 1
 	;;
   armv7a|armv7-a|armeabi-v7a)
 	TOOLCHAIN_ARCH="arm-linux-androideabi"
@@ -320,7 +317,8 @@ case "$THE_STL" in
 	AOSP_STL_LIB="$ANDROID_NDK_ROOT/sources/cxx-stl/gnu-libstdc++/$AOSP_TOOLCHAIN_SUFFIX/libs/$AOSP_ABI/libgnustl_shared.so"
 	;;
   llvm-static)
-  	if [ ! -d "$LLVM_INCLUDE_DIR" ]; then
+	echo WARNING: llvm is still in experimental state and migth not work as expected
+	if [ ! -d "$LLVM_INCLUDE_DIR" ]; then
 		echo "ERROR: Unable to locate include LLVM directory at $LLVM_INCLUDE_DIR -- has it moved since NDK r16beta1?"
 		[ "$0" = "$BASH_SOURCE" ] && exit 1 || return 1
 	fi
@@ -328,7 +326,8 @@ case "$THE_STL" in
 	AOSP_STL_LIB="$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++/libs/$AOSP_ABI/libc++_static.a"
 	;;
   llvm|llvm-shared)
-  	if [ ! -d "$LLVM_INCLUDE_DIR" ]; then
+	echo WARNING: llvm is still in experimental state and migth not work as expected
+	if [ ! -d "$LLVM_INCLUDE_DIR" ]; then
 		echo "ERROR: Unable to locate LLVM include directory at $LLVM_INCLUDE_DIR -- has it moved since NDK r16beta1?"
 		[ "$0" = "$BASH_SOURCE" ] && exit 1 || return 1
 	fi
