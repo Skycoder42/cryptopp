@@ -1,8 +1,8 @@
 language: cpp
 
-os:
-  - linux
-  - osx
+#os:
+  #- linux
+  #- osx
 
 dist: trusty
 sudo: required
@@ -62,10 +62,6 @@ matrix:
       env: BUILD_MODE="ios-tv"
 
   include:
-    - os: linux
-      env:
-        - BUILD_MODE=android
-        - PLATFORM=armeabi
     - os: linux
       env:
         - BUILD_MODE=android
