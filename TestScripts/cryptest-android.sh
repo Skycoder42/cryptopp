@@ -35,11 +35,10 @@ do
 			(
 				. ./setenv-android.sh "$platform" "$runtime" > /dev/null 2>&1
 				make -f GNUmakefile-cross static dynamic cryptest.exe
-				echo
 				if [ "$?" -eq "0" ]; then
-					echo "==> BUILD SUCCESSFUL"
+					echo "$platform:$runtime ==> SUCCESSFUL" >> /tmp/build.log
 				else
-					echo "==> BUILD FAILTURE"
+					echo "$platform:$runtime ==> FAILURE" >> /tmp/build.log
 				fi
 			)
 		else
@@ -48,3 +47,5 @@ do
 		fi
 	done
 done
+
+cat /tmp/build.log
