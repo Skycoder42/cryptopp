@@ -22,16 +22,6 @@ env:
     - BUILD_JOBS=2
 
   matrix:
-    - BUILD_MODE="all"
-    - BUILD_MODE="native"
-    - BUILD_MODE="no-asm"
-    - BUILD_MODE="debug"
-    - BUILD_MODE="asan"
-    - BUILD_MODE="ubsan"
-    - BUILD_MODE="ios-arm"
-    - BUILD_MODE="ios-arm64"
-    - BUILD_MODE="ios-watch"
-    - BUILD_MODE="ios-tv"
     - BUILD_MODE="android" # TODO split up to have one build for each platform/runtime
 
 matrix:
@@ -57,6 +47,11 @@ matrix:
       env: BUILD_MODE="ios-watch"
     - os: linux
       env: BUILD_MODE="ios-tv"
+    - os: osx
+      env: BUILD_MODE="android"
+    - os: linux
+      compiler: clang
+      env: BUILD_MODE="android"
 
   allow_failures:
     - os: osx
