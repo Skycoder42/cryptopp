@@ -60,7 +60,6 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-/// \class TrapdoorFunctionBounds
 /// \brief Provides range for plaintext and ciphertext lengths
 /// \details A trapdoor function is a function that is easy to compute in one direction,
 ///   but difficult to compute in the opposite direction without special knowledge.
@@ -93,7 +92,6 @@ public:
 	virtual Integer MaxImage() const {return --ImageBound();}
 };
 
-/// \class RandomizedTrapdoorFunction
 /// \brief Applies the trapdoor function, using random data if required
 /// \details ApplyFunction() is the foundation for encrypting a message under a public key.
 ///   Derived classes will override it at some point.
@@ -119,7 +117,6 @@ public:
 	virtual bool IsRandomized() const {return true;}
 };
 
-/// \class TrapdoorFunction
 /// \brief Applies the trapdoor function
 /// \details ApplyFunction() is the foundation for encrypting a message under a public key.
 ///    Derived classes will override it at some point.
@@ -149,7 +146,6 @@ public:
 	virtual Integer ApplyFunction(const Integer &x) const =0;
 };
 
-/// \class RandomizedTrapdoorFunctionInverse
 /// \brief Applies the inverse of the trapdoor function, using random data if required
 /// \details CalculateInverse() is the foundation for decrypting a message under a private key
 ///   in a public key cryptosystem. Derived classes will override it at some point.
@@ -174,7 +170,6 @@ public:
 	virtual bool IsRandomized() const {return true;}
 };
 
-/// \class TrapdoorFunctionInverse
 /// \brief Applies the inverse of the trapdoor function
 /// \details CalculateInverse() is the foundation for decrypting a message under a private key
 ///   in a public key cryptosystem. Derived classes will override it at some point.
@@ -209,7 +204,6 @@ public:
 
 // ********************************************************
 
-/// \class PK_EncryptionMessageEncodingMethod
 /// \brief Message encoding method for public key encryption
 class CRYPTOPP_NO_VTABLE PK_EncryptionMessageEncodingMethod
 {
@@ -229,7 +223,6 @@ public:
 
 // ********************************************************
 
-/// \class TF_Base
 /// \brief The base for trapdoor based cryptosystems
 /// \tparam TFI trapdoor function interface derived class
 /// \tparam MEI message encoding interface derived class
@@ -250,7 +243,6 @@ protected:
 
 // ********************************************************
 
-/// \class PK_FixedLengthCryptoSystemImpl
 /// \brief Public key trapdoor function default implementation
 /// \tparam BASE public key cryptosystem with a fixed length
 template <class BASE>
@@ -268,7 +260,6 @@ public:
 	virtual size_t FixedCiphertextLength() const =0;
 };
 
-/// \class TF_CryptoSystemBase
 /// \brief Trapdoor function cryptosystem base class
 /// \tparam INTFACE public key cryptosystem base interface
 /// \tparam BASE public key cryptosystem implementation base
@@ -288,7 +279,6 @@ protected:
 	size_t PaddedBlockBitLength() const {return SaturatingSubtract(this->GetTrapdoorFunctionBounds().PreimageBound().BitCount(),1U);}
 };
 
-/// \class TF_DecryptorBase
 /// \brief Trapdoor function cryptosystems decryption base class
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE TF_DecryptorBase : public TF_CryptoSystemBase<PK_Decryptor, TF_Base<TrapdoorFunctionInverse, PK_EncryptionMessageEncodingMethod> >
 {
@@ -298,7 +288,6 @@ public:
 	DecodingResult Decrypt(RandomNumberGenerator &rng, const byte *ciphertext, size_t ciphertextLength, byte *plaintext, const NameValuePairs &parameters = g_nullNameValuePairs) const;
 };
 
-/// \class TF_EncryptorBase
 /// \brief Trapdoor function cryptosystems encryption base class
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE TF_EncryptorBase : public TF_CryptoSystemBase<PK_Encryptor, TF_Base<RandomizedTrapdoorFunction, PK_EncryptionMessageEncodingMethod> >
 {
@@ -313,7 +302,6 @@ public:
 // Typedef change due to Clang, http://github.com/weidai11/cryptopp/issues/300
 typedef std::pair<const byte *, unsigned int> HashIdentifier;
 
-/// \class PK_SignatureMessageEncodingMethod
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details PK_SignatureMessageEncodingMethod provides interfaces for message
 ///   encoding method for public key signature schemes. The methods support both
@@ -397,7 +385,6 @@ public:
 	};
 };
 
-/// \class PK_DeterministicSignatureMessageEncodingMethod
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details PK_DeterministicSignatureMessageEncodingMethod provides interfaces
 ///   for message encoding method for public key signature schemes.
@@ -409,7 +396,6 @@ public:
 		byte *representative, size_t representativeBitLength) const;
 };
 
-/// \class PK_RecoverableSignatureMessageEncodingMethod
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details PK_RecoverableSignatureMessageEncodingMethod provides interfaces
 ///   for message encoding method for public key signature schemes.
@@ -421,7 +407,6 @@ public:
 		byte *representative, size_t representativeBitLength) const;
 };
 
-/// \class DL_SignatureMessageEncodingMethod_DSA
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details DL_SignatureMessageEncodingMethod_DSA provides interfaces
 ///   for message encoding method for DSA.
@@ -434,7 +419,6 @@ public:
 		byte *representative, size_t representativeBitLength) const;
 };
 
-/// \class DL_SignatureMessageEncodingMethod_NR
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details DL_SignatureMessageEncodingMethod_NR provides interfaces
 ///   for message encoding method for Nyberg-Rueppel.
@@ -447,7 +431,7 @@ public:
 		byte *representative, size_t representativeBitLength) const;
 };
 
-/// \class DL_SignatureMessageEncodingMethod_SM2
+#if 0
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details DL_SignatureMessageEncodingMethod_SM2 provides interfaces
 ///   for message encoding method for SM2.
@@ -459,8 +443,8 @@ public:
 		HashTransformation &hash, HashIdentifier hashIdentifier, bool messageEmpty,
 		byte *representative, size_t representativeBitLength) const;
 };
+#endif
 
-/// \class PK_MessageAccumulatorBase
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details PK_MessageAccumulatorBase provides interfaces
 ///   for message encoding method.
@@ -482,7 +466,6 @@ public:
 	bool m_empty;
 };
 
-/// \class PK_MessageAccumulatorImpl
 /// \brief Interface for message encoding method for public key signature schemes.
 /// \details PK_MessageAccumulatorBase provides interfaces
 ///   for message encoding method.
@@ -493,7 +476,6 @@ public:
 	HashTransformation & AccessHash() {return this->m_object;}
 };
 
-/// \class TF_SignatureSchemeBase
 /// \brief Trapdoor Function (TF) Signature Scheme base class
 /// \tparam INTFACE interface
 /// \tparam BASE base class
@@ -525,7 +507,6 @@ protected:
 	virtual size_t GetDigestSize() const =0;
 };
 
-/// \class TF_SignerBase
 /// \brief Trapdoor Function (TF) Signer base class
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE TF_SignerBase : public TF_SignatureSchemeBase<PK_Signer, TF_Base<RandomizedTrapdoorFunctionInverse, PK_SignatureMessageEncodingMethod> >
 {
@@ -536,7 +517,6 @@ public:
 	size_t SignAndRestart(RandomNumberGenerator &rng, PK_MessageAccumulator &messageAccumulator, byte *signature, bool restart=true) const;
 };
 
-/// \class TF_VerifierBase
 /// \brief Trapdoor Function (TF) Verifier base class
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE TF_VerifierBase : public TF_SignatureSchemeBase<PK_Verifier, TF_Base<TrapdoorFunction, PK_SignatureMessageEncodingMethod> >
 {
@@ -550,7 +530,6 @@ public:
 
 // ********************************************************
 
-/// \class TF_CryptoSchemeOptions
 /// \brief Trapdoor Function (TF) scheme options
 /// \tparam T1 algorithm info class
 /// \tparam T2 keys class with public and private key
@@ -565,7 +544,6 @@ struct TF_CryptoSchemeOptions
 	typedef T3 MessageEncodingMethod;
 };
 
-/// \class TF_SignatureSchemeOptions
 /// \brief Trapdoor Function (TF) signature scheme options
 /// \tparam T1 algorithm info class
 /// \tparam T2 keys class with public and private key
@@ -577,7 +555,6 @@ struct TF_SignatureSchemeOptions : public TF_CryptoSchemeOptions<T1, T2, T3>
 	typedef T4 HashFunction;
 };
 
-/// \class TF_ObjectImplBase
 /// \brief Trapdoor Function (TF) base implementation
 /// \tparam BASE base class
 /// \tparam SCHEME_OPTIONS scheme options class
@@ -633,7 +610,6 @@ protected:
 	}
 };
 
-/// \class TF_ObjectImplExtRef
 /// \brief Trapdoor Function (TF) signature with external reference
 /// \tparam BASE base class
 /// \tparam SCHEME_OPTIONS scheme options class
@@ -655,7 +631,6 @@ private:
 	const KEY * m_pKey;
 };
 
-/// \class TF_ObjectImpl
 /// \brief Trapdoor Function (TF) signature scheme options
 /// \tparam BASE base class
 /// \tparam SCHEME_OPTIONS scheme options class
@@ -676,7 +651,6 @@ private:
 	KeyClass m_trapdoorFunction;
 };
 
-/// \class TF_DecryptorImpl
 /// \brief Trapdoor Function (TF) decryptor options
 /// \tparam SCHEME_OPTIONS scheme options class
 template <class SCHEME_OPTIONS>
@@ -684,7 +658,6 @@ class TF_DecryptorImpl : public TF_ObjectImpl<TF_DecryptorBase, SCHEME_OPTIONS, 
 {
 };
 
-/// \class TF_EncryptorImpl
 /// \brief Trapdoor Function (TF) encryptor options
 /// \tparam SCHEME_OPTIONS scheme options class
 template <class SCHEME_OPTIONS>
@@ -692,7 +665,6 @@ class TF_EncryptorImpl : public TF_ObjectImpl<TF_EncryptorBase, SCHEME_OPTIONS, 
 {
 };
 
-/// \class TF_SignerImpl
 /// \brief Trapdoor Function (TF) encryptor options
 /// \tparam SCHEME_OPTIONS scheme options class
 template <class SCHEME_OPTIONS>
@@ -700,7 +672,6 @@ class TF_SignerImpl : public TF_ObjectImpl<TF_SignerBase, SCHEME_OPTIONS, typena
 {
 };
 
-/// \class TF_VerifierImpl
 /// \brief Trapdoor Function (TF) encryptor options
 /// \tparam SCHEME_OPTIONS scheme options class
 template <class SCHEME_OPTIONS>
@@ -710,7 +681,6 @@ class TF_VerifierImpl : public TF_ObjectImpl<TF_VerifierBase, SCHEME_OPTIONS, ty
 
 // ********************************************************
 
-/// \class MaskGeneratingFunction
 /// \brief Mask generation function interface
 class CRYPTOPP_NO_VTABLE MaskGeneratingFunction
 {
@@ -740,7 +710,6 @@ public:
 /// \param counterStart starting counter value used in generation function
 CRYPTOPP_DLL void CRYPTOPP_API P1363_MGF1KDF2_Common(HashTransformation &hash, byte *output, size_t outputLength, const byte *input, size_t inputLength, const byte *derivationParams, size_t derivationParamsLength, bool mask, unsigned int counterStart);
 
-/// \class P1363_MGF1
 /// \brief P1363 mask generation function
 class P1363_MGF1 : public MaskGeneratingFunction
 {
@@ -754,7 +723,6 @@ public:
 
 // ********************************************************
 
-/// \class MaskGeneratingFunction
 /// \brief P1363 key derivation function
 /// \tparam H hash function used in the derivation
 template <class H>
@@ -1188,6 +1156,9 @@ void DL_PublicKey<T>::AssignFrom(const NameValuePairs &source)
 class OID;
 
 /// \brief Discrete Log (DL) key base implementation
+/// \tparam PK Key class
+/// \tparam GP GroupParameters class
+/// \tparam O OID class
 template <class PK, class GP, class O = OID>
 class DL_KeyImpl : public PK
 {
@@ -1213,6 +1184,7 @@ class X509PublicKey;
 class PKCS8PrivateKey;
 
 /// \brief Discrete Log (DL) private key base implementation
+/// \tparam GP GroupParameters class
 template <class GP>
 class DL_PrivateKeyImpl : public DL_PrivateKey<typename GP::Element>, public DL_KeyImpl<PKCS8PrivateKey, GP>
 {
@@ -1282,7 +1254,6 @@ private:
 	Integer m_x;
 };
 
-/// _
 template <class BASE, class SIGNATURE_SCHEME>
 class DL_PrivateKey_WithSignaturePairwiseConsistencyTest : public BASE
 {
@@ -1303,6 +1274,7 @@ public:
 };
 
 /// \brief Discrete Log (DL) public key base implementation
+/// \tparam GP GroupParameters class
 template <class GP>
 class DL_PublicKeyImpl : public DL_PublicKey<typename GP::Element>, public DL_KeyImpl<X509PublicKey, GP>
 {
@@ -1370,25 +1342,55 @@ template<class GP>
 DL_PublicKeyImpl<GP>::~DL_PublicKeyImpl() {}
 
 /// \brief Interface for Elgamal-like signature algorithms
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_ElgamalLikeSignatureAlgorithm
 {
 public:
 	virtual ~DL_ElgamalLikeSignatureAlgorithm() {}
 
+	/// \brief Sign a message using a private key
+	/// \param params GroupParameters
+	/// \param privateKey private key
+	/// \param k signing exponent
+	/// \param e encoded message
+	/// \param r r part of signature
+	/// \param s s part of signature
 	virtual void Sign(const DL_GroupParameters<T> &params, const Integer &privateKey, const Integer &k, const Integer &e, Integer &r, Integer &s) const =0;
+
+	/// \brief Verify a message using a public key
+	/// \param params GroupParameters
+	/// \param publicKey public key
+	/// \param e encoded message
+	/// \param r r part of signature
+	/// \param s s part of signature
 	virtual bool Verify(const DL_GroupParameters<T> &params, const DL_PublicKey<T> &publicKey, const Integer &e, const Integer &r, const Integer &s) const =0;
+
+	/// \brief Recover a Presignature
+	/// \param params GroupParameters
+	/// \param publicKey public key
+	/// \param r r part of signature
+	/// \param s s part of signature
 	virtual Integer RecoverPresignature(const DL_GroupParameters<T> &params, const DL_PublicKey<T> &publicKey, const Integer &r, const Integer &s) const
 	{
 		CRYPTOPP_UNUSED(params); CRYPTOPP_UNUSED(publicKey); CRYPTOPP_UNUSED(r); CRYPTOPP_UNUSED(s);
 		throw NotImplemented("DL_ElgamalLikeSignatureAlgorithm: this signature scheme does not support message recovery");
 		MAYBE_RETURN(Integer::Zero());
 	}
+
+	/// \brief Retrieve R length
+	/// \param params GroupParameters
 	virtual size_t RLen(const DL_GroupParameters<T> &params) const
 		{return params.GetSubgroupOrder().ByteCount();}
+
+	/// \brief Retrieve S length
+	/// \param params GroupParameters
 	virtual size_t SLen(const DL_GroupParameters<T> &params) const
 		{return params.GetSubgroupOrder().ByteCount();}
-	// RFC 6979, present in DL signers
+
+	/// \brief Signature scheme flag
+	/// \returns true if the signature scheme is deterministic, false otherwise
+	/// \details IsDeterministic() is provided for DL signers. It is used by RFC 6979 signature schemes.
 	virtual bool IsDeterministic() const
 		{return false;}
 };
@@ -1400,10 +1402,15 @@ class CRYPTOPP_NO_VTABLE DeterministicSignatureAlgorithm
 public:
 	virtual ~DeterministicSignatureAlgorithm() {}
 
+	/// \brief Generate k
+	/// \param x private key
+	/// \param q subgroup generator
+	/// \param e encoded message
 	virtual Integer GenerateRandom(const Integer &x, const Integer &q, const Integer &e) const =0;
 };
 
 /// \brief Interface for DL key agreement algorithms
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_KeyAgreementAlgorithm
 {
@@ -1417,6 +1424,7 @@ public:
 };
 
 /// \brief Interface for key derivation algorithms used in DL cryptosystems
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_KeyDerivationAlgorithm
 {
@@ -1522,7 +1530,7 @@ protected:
 };
 
 /// \brief Discrete Log (DL) signature scheme signer base implementation
-/// \tparam T class or type
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_SignerBase : public DL_SignatureSchemeBase<PK_Signer, DL_PrivateKey<T> >
 {
@@ -1631,7 +1639,8 @@ protected:
 	}
 };
 
-/// _
+/// \brief Discret Log (DL) Verifier base class
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_VerifierBase : public DL_SignatureSchemeBase<PK_Verifier, DL_PublicKey<T> >
 {
@@ -1735,7 +1744,7 @@ protected:
 };
 
 /// \brief Discrete Log (DL) decryptor base implementation
-/// \tparam T field element type
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_DecryptorBase : public DL_CryptoSystemBase<PK_Decryptor, DL_PrivateKey<T> >
 {
@@ -1775,7 +1784,7 @@ public:
 };
 
 /// \brief Discrete Log (DL) encryptor base implementation
-/// \tparam T field element type
+/// \tparam T Field element
 template <class T>
 class CRYPTOPP_NO_VTABLE DL_EncryptorBase : public DL_CryptoSystemBase<PK_Encryptor, DL_PublicKey<T> >
 {
@@ -2212,7 +2221,6 @@ public:
 	typedef PK_FinalTemplate<TF_EncryptorImpl<SchemeOptions> > Encryptor;
 };
 
-/// \class TF_SS
 /// \brief Trapdoor Function (TF) Signature Scheme
 /// \tparam STANDARD standard
 /// \tparam H hash function
@@ -2238,7 +2246,6 @@ public:
 	typedef PK_FinalTemplate<TF_VerifierImpl<SchemeOptions> > Verifier;
 };
 
-/// \class DL_SS
 /// \brief Discrete Log (DL) signature scheme
 /// \tparam KEYS keys used in the signature scheme
 /// \tparam SA signature algorithm

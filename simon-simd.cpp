@@ -18,10 +18,6 @@
 // #undef CRYPTOPP_SSE41_AVAILABLE
 // #undef CRYPTOPP_ARM_NEON_AVAILABLE
 
-#if (CRYPTOPP_ARM_NEON_AVAILABLE)
-# include <arm_neon.h>
-#endif
-
 #if (CRYPTOPP_SSSE3_AVAILABLE)
 # include <pmmintrin.h>
 # include <tmmintrin.h>
@@ -34,6 +30,25 @@
 #if defined(__AVX512F__) && defined(__AVX512VL__)
 # define CRYPTOPP_AVX512_ROTATE 1
 # include <immintrin.h>
+#endif
+
+#if (CRYPTOPP_ARM_NEON_AVAILABLE)
+# include <arm_neon.h>
+#endif
+
+// Can't use CRYPTOPP_ARM_XXX_AVAILABLE because too many
+// compilers don't follow ACLE conventions for the include.
+#if defined(CRYPTOPP_ARM_ACLE_AVAILABLE)
+# include <stdint.h>
+# include <arm_acle.h>
+#endif
+
+// https://www.spinics.net/lists/gcchelp/msg47735.html and
+// https://www.spinics.net/lists/gcchelp/msg47749.html
+#if (CRYPTOPP_GCC_VERSION >= 40900)
+# define GCC_NO_UBSAN __attribute__ ((no_sanitize_undefined))
+#else
+# define GCC_NO_UBSAN
 #endif
 
 ANONYMOUS_NAMESPACE_BEGIN
@@ -128,7 +143,7 @@ inline void SIMON64_Enc_Block(uint32x4_t &block1, uint32x4_t &block0,
 
     x1 = Shuffle32(x1); y1 = Shuffle32(y1);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1)-1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1)-1; i += 2)
     {
         const uint32x4_t rk1 = vld1q_dup_u32(subkeys+i);
         y1 = veorq_u32(veorq_u32(y1, SIMON64_f(x1)), rk1);
@@ -174,7 +189,7 @@ inline void SIMON64_Dec_Block(uint32x4_t &block0, uint32x4_t &block1,
         rounds--;
     }
 
-    for (size_t i = rounds-2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const uint32x4_t rk1 = vld1q_dup_u32(subkeys+i+1);
         x1 = veorq_u32(veorq_u32(x1, SIMON64_f(y1)), rk1);
@@ -210,7 +225,7 @@ inline void SIMON64_Enc_6_Blocks(uint32x4_t &block0, uint32x4_t &block1,
     x2 = Shuffle32(x2); y2 = Shuffle32(y2);
     x3 = Shuffle32(x3); y3 = Shuffle32(y3);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1) - 1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1) - 1; i += 2)
     {
         const uint32x4_t rk1 = vld1q_dup_u32(subkeys+i);
         y1 = veorq_u32(veorq_u32(y1, SIMON64_f(x1)), rk1);
@@ -277,7 +292,7 @@ inline void SIMON64_Dec_6_Blocks(uint32x4_t &block0, uint32x4_t &block1,
         rounds--;
     }
 
-    for (size_t i = rounds - 2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const uint32x4_t rk1 = vld1q_dup_u32(subkeys + i + 1);
         x1 = veorq_u32(veorq_u32(x1, SIMON64_f(y1)), rk1);
@@ -401,7 +416,7 @@ inline void SIMON128_Enc_Block(uint64x2_t &block0, uint64x2_t &block1,
 
     x1 = Shuffle64(x1); y1 = Shuffle64(y1);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1)-1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1)-1; i += 2)
     {
         const uint64x2_t rk1 = vld1q_dup_u64(subkeys+i);
         y1 = veorq_u64(veorq_u64(y1, SIMON128_f(x1)), rk1);
@@ -443,7 +458,7 @@ inline void SIMON128_Enc_6_Blocks(uint64x2_t &block0, uint64x2_t &block1,
     x2 = Shuffle64(x2); y2 = Shuffle64(y2);
     x3 = Shuffle64(x3); y3 = Shuffle64(y3);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1) - 1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1) - 1; i += 2)
     {
         const uint64x2_t rk1 = vld1q_dup_u64(subkeys+i);
         y1 = veorq_u64(veorq_u64(y1, SIMON128_f(x1)), rk1);
@@ -499,7 +514,7 @@ inline void SIMON128_Dec_Block(uint64x2_t &block0, uint64x2_t &block1,
         rounds--;
     }
 
-    for (size_t i = rounds-2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const uint64x2_t rk1 = vld1q_dup_u64(subkeys+i+1);
         x1 = veorq_u64(veorq_u64(x1, SIMON128_f(y1)), rk1);
@@ -544,7 +559,7 @@ inline void SIMON128_Dec_6_Blocks(uint64x2_t &block0, uint64x2_t &block1,
         rounds--;
     }
 
-    for (size_t i = rounds - 2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const uint64x2_t rk1 = vld1q_dup_u64(subkeys + i + 1);
         x1 = veorq_u64(veorq_u64(x1, SIMON128_f(y1)), rk1);
@@ -581,6 +596,14 @@ inline void SIMON128_Dec_6_Blocks(uint64x2_t &block0, uint64x2_t &block1,
 #endif
 #ifndef CONST_M128_CAST
 # define CONST_M128_CAST(x) ((const __m128i *)(const void *)(x))
+#endif
+
+// GCC double casts, https://www.spinics.net/lists/gcchelp/msg47735.html
+#ifndef DOUBLE_CAST
+# define DOUBLE_CAST(x) ((double *)(void *)(x))
+#endif
+#ifndef CONST_DOUBLE_CAST
+# define CONST_DOUBLE_CAST(x) ((const double *)(const void *)(x))
 #endif
 
 inline void Swap128(__m128i& a,__m128i& b)
@@ -644,7 +667,8 @@ inline __m128i SIMON128_f(const __m128i& v)
         _mm_and_si128(RotateLeft64<1>(v), RotateLeft64<8>(v)));
 }
 
-inline void SIMON128_Enc_Block(__m128i &block0, __m128i &block1, const word64 *subkeys, unsigned int rounds)
+inline void GCC_NO_UBSAN SIMON128_Enc_Block(__m128i &block0, __m128i &block1,
+    const word64 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
     // a big-endian byte array. Depending on the number of blocks it needs to
@@ -657,21 +681,21 @@ inline void SIMON128_Enc_Block(__m128i &block0, __m128i &block1, const word64 *s
     x1 = _mm_shuffle_epi8(x1, mask);
     y1 = _mm_shuffle_epi8(y1, mask);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1)-1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1)-1; i += 2)
     {
         const __m128i rk1 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i)));
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON128_f(x1)), rk1);
 
         const __m128i rk2 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i+1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i+1)));
         x1 = _mm_xor_si128(_mm_xor_si128(x1, SIMON128_f(y1)), rk2);
     }
 
     if (rounds & 1)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+rounds-1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+rounds-1)));
 
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON128_f(x1)), rk);
         Swap128(x1, y1);
@@ -684,7 +708,7 @@ inline void SIMON128_Enc_Block(__m128i &block0, __m128i &block1, const word64 *s
     block1 = _mm_unpackhi_epi64(x1, y1);
 }
 
-inline void SIMON128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SIMON128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word64 *subkeys, unsigned int rounds)
 {
@@ -707,16 +731,16 @@ inline void SIMON128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     x3 = _mm_shuffle_epi8(x3, mask);
     y3 = _mm_shuffle_epi8(y3, mask);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1) - 1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1) - 1; i += 2)
     {
         const __m128i rk1 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + i)));
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON128_f(x1)), rk1);
         y2 = _mm_xor_si128(_mm_xor_si128(y2, SIMON128_f(x2)), rk1);
         y3 = _mm_xor_si128(_mm_xor_si128(y3, SIMON128_f(x3)), rk1);
 
         const __m128i rk2 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + i + 1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + i + 1)));
         x1 = _mm_xor_si128(_mm_xor_si128(x1, SIMON128_f(y1)), rk2);
         x2 = _mm_xor_si128(_mm_xor_si128(x2, SIMON128_f(y2)), rk2);
         x3 = _mm_xor_si128(_mm_xor_si128(x3, SIMON128_f(y3)), rk2);
@@ -725,7 +749,7 @@ inline void SIMON128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     if (rounds & 1)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + rounds - 1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + rounds - 1)));
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON128_f(x1)), rk);
         y2 = _mm_xor_si128(_mm_xor_si128(y2, SIMON128_f(x2)), rk);
         y3 = _mm_xor_si128(_mm_xor_si128(y3, SIMON128_f(x3)), rk);
@@ -748,7 +772,8 @@ inline void SIMON128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     block5 = _mm_unpackhi_epi64(x3, y3);
 }
 
-inline void SIMON128_Dec_Block(__m128i &block0, __m128i &block1, const word64 *subkeys, unsigned int rounds)
+inline void GCC_NO_UBSAN SIMON128_Dec_Block(__m128i &block0, __m128i &block1,
+    const word64 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
     // a big-endian byte array. Depending on the number of blocks it needs to
@@ -764,21 +789,21 @@ inline void SIMON128_Dec_Block(__m128i &block0, __m128i &block1, const word64 *s
     if (rounds & 1)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + rounds - 1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + rounds - 1)));
 
         Swap128(x1, y1);
         y1 = _mm_xor_si128(_mm_xor_si128(y1, rk), SIMON128_f(x1));
         rounds--;
     }
 
-    for (size_t i = rounds-2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const __m128i rk1 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i+1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i+1)));
         x1 = _mm_xor_si128(_mm_xor_si128(x1, SIMON128_f(y1)), rk1);
 
         const __m128i rk2 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i)));
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON128_f(x1)), rk2);
     }
 
@@ -789,7 +814,7 @@ inline void SIMON128_Dec_Block(__m128i &block0, __m128i &block1, const word64 *s
     block1 = _mm_unpackhi_epi64(x1, y1);
 }
 
-inline void SIMON128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SIMON128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word64 *subkeys, unsigned int rounds)
 {
@@ -815,7 +840,7 @@ inline void SIMON128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     if (rounds & 1)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + rounds - 1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + rounds - 1)));
 
         Swap128(x1, y1); Swap128(x2, y2); Swap128(x3, y3);
         y1 = _mm_xor_si128(_mm_xor_si128(y1, rk), SIMON128_f(x1));
@@ -824,16 +849,16 @@ inline void SIMON128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
         rounds--;
     }
 
-    for (size_t i = rounds - 2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const __m128i rk1 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + i + 1)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + i + 1)));
         x1 = _mm_xor_si128(_mm_xor_si128(x1, SIMON128_f(y1)), rk1);
         x2 = _mm_xor_si128(_mm_xor_si128(x2, SIMON128_f(y2)), rk1);
         x3 = _mm_xor_si128(_mm_xor_si128(x3, SIMON128_f(y3)), rk1);
 
         const __m128i rk2 = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys + i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys + i)));
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON128_f(x1)), rk2);
         y2 = _mm_xor_si128(_mm_xor_si128(y2, SIMON128_f(x2)), rk2);
         y3 = _mm_xor_si128(_mm_xor_si128(y3, SIMON128_f(x3)), rk2);
@@ -895,7 +920,7 @@ inline __m128i SIMON64_f(const __m128i& v)
         _mm_and_si128(RotateLeft32<1>(v), RotateLeft32<8>(v)));
 }
 
-inline void SIMON64_Enc_Block(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SIMON64_Enc_Block(__m128i &block0, __m128i &block1,
     const word32 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
@@ -912,7 +937,7 @@ inline void SIMON64_Enc_Block(__m128i &block0, __m128i &block1,
     x1 = _mm_shuffle_epi8(x1, mask);
     y1 = _mm_shuffle_epi8(y1, mask);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1)-1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1)-1; i += 2)
     {
         const __m128i rk1 = _mm_set1_epi32(subkeys[i]);
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON64_f(x1)), rk1);
@@ -937,7 +962,7 @@ inline void SIMON64_Enc_Block(__m128i &block0, __m128i &block1,
     block1 = _mm_unpackhi_epi32(x1, y1);
 }
 
-inline void SIMON64_Dec_Block(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SIMON64_Dec_Block(__m128i &block0, __m128i &block1,
     const word32 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
@@ -962,7 +987,7 @@ inline void SIMON64_Dec_Block(__m128i &block0, __m128i &block1,
         rounds--;
     }
 
-    for (size_t i = rounds-2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const __m128i rk1 = _mm_set1_epi32(subkeys[i+1]);
         x1 = _mm_xor_si128(_mm_xor_si128(x1, SIMON64_f(y1)), rk1);
@@ -980,7 +1005,7 @@ inline void SIMON64_Dec_Block(__m128i &block0, __m128i &block1,
     block1 = _mm_unpackhi_epi32(x1, y1);
 }
 
-inline void SIMON64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SIMON64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word32 *subkeys, unsigned int rounds)
 {
@@ -1012,7 +1037,7 @@ inline void SIMON64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     x3 = _mm_shuffle_epi8(x3, mask);
     y3 = _mm_shuffle_epi8(y3, mask);
 
-    for (size_t i = 0; static_cast<int>(i) < (rounds & ~1)-1; i += 2)
+    for (int i = 0; i < static_cast<int>(rounds & ~1)-1; i += 2)
     {
         const __m128i rk1 = _mm_set1_epi32(subkeys[i]);
         y1 = _mm_xor_si128(_mm_xor_si128(y1, SIMON64_f(x1)), rk1);
@@ -1051,7 +1076,7 @@ inline void SIMON64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     block5 = _mm_unpackhi_epi32(x3, y3);
 }
 
-inline void SIMON64_Dec_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SIMON64_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word32 *subkeys, unsigned int rounds)
 {
@@ -1093,7 +1118,7 @@ inline void SIMON64_Dec_6_Blocks(__m128i &block0, __m128i &block1,
         rounds--;
     }
 
-    for (size_t i = rounds-2; static_cast<int>(i) >= 0; i -= 2)
+    for (int i = static_cast<int>(rounds-2); i >= 0; i -= 2)
     {
         const __m128i rk1 = _mm_set1_epi32(subkeys[i+1]);
         x1 = _mm_xor_si128(_mm_xor_si128(x1, SIMON64_f(y1)), rk1);
@@ -1137,14 +1162,14 @@ NAMESPACE_BEGIN(CryptoPP)
 size_t SIMON64_Enc_AdvancedProcessBlocks_NEON(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_NEON2x6(SIMON64_Enc_Block, SIMON64_Enc_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_NEON(SIMON64_Enc_Block, SIMON64_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SIMON64_Dec_AdvancedProcessBlocks_NEON(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_NEON2x6(SIMON64_Dec_Block, SIMON64_Dec_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_NEON(SIMON64_Dec_Block, SIMON64_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif  // CRYPTOPP_ARM_NEON_AVAILABLE
@@ -1153,14 +1178,14 @@ size_t SIMON64_Dec_AdvancedProcessBlocks_NEON(const word32* subKeys, size_t roun
 size_t SIMON128_Enc_AdvancedProcessBlocks_NEON(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_NEON2x6(SIMON128_Enc_Block, SIMON128_Enc_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_NEON(SIMON128_Enc_Block, SIMON128_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SIMON128_Dec_AdvancedProcessBlocks_NEON(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_NEON2x6(SIMON128_Dec_Block, SIMON128_Dec_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_NEON(SIMON128_Dec_Block, SIMON128_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif  // CRYPTOPP_ARM_NEON_AVAILABLE
@@ -1171,14 +1196,14 @@ size_t SIMON128_Dec_AdvancedProcessBlocks_NEON(const word64* subKeys, size_t rou
 size_t SIMON64_Enc_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_SSE2x6(SIMON64_Enc_Block, SIMON64_Enc_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_SSE(SIMON64_Enc_Block, SIMON64_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SIMON64_Dec_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_SSE2x6(SIMON64_Dec_Block, SIMON64_Dec_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_SSE(SIMON64_Dec_Block, SIMON64_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif
@@ -1187,14 +1212,14 @@ size_t SIMON64_Dec_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rou
 size_t SIMON128_Enc_AdvancedProcessBlocks_SSSE3(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_SSE2x6(SIMON128_Enc_Block, SIMON128_Enc_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_SSE(SIMON128_Enc_Block, SIMON128_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SIMON128_Dec_AdvancedProcessBlocks_SSSE3(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_SSE2x6(SIMON128_Dec_Block, SIMON128_Dec_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_SSE(SIMON128_Dec_Block, SIMON128_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif  // CRYPTOPP_SSSE3_AVAILABLE

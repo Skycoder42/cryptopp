@@ -16,7 +16,6 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-/// \class ElGamalBase
 /// \brief ElGamal key agreement and encryption schemes base class
 /// \since Crypto++ 1.0
 class CRYPTOPP_NO_VTABLE ElGamalBase : public DL_KeyAgreementAlgorithm_DH<Integer, NoCofactorMultiplication>,
@@ -93,7 +92,6 @@ public:
 	virtual const DL_GroupParameters_GFP & GetGroupParameters() const =0;
 };
 
-/// \class ElGamalObjectImpl
 /// \brief ElGamal key agreement and encryption schemes default implementation
 /// \since Crypto++ 1.0
 template <class BASE, class SCHEME_OPTIONS, class KEY>
@@ -116,16 +114,18 @@ protected:
 	const DL_SymmetricEncryptionAlgorithm & GetSymmetricEncryptionAlgorithm() const {return *this;}
 };
 
-/// \class ElGamalKeys
 /// \brief ElGamal key agreement and encryption schemes keys
+/// \details The ElGamalKeys class used DL_PrivateKey_GFP_OldFormat and DL_PublicKey_GFP_OldFormat
+///   for the PrivateKey and PublicKey typedef from about Crypto++ 1.0 through Crypto++ 5.6.5.
+///   At Crypto++ 6.0 the serialization format was cutover to standard PKCS8 and X509 encodings.
+/// \sa <A HREF="https://github.com/weidai11/cryptopp/commit/a5a684d92986e8e2">Commit a5a684d92986e8e2</A>
 struct ElGamalKeys
 {
 	typedef DL_CryptoKeys_GFP::GroupParameters GroupParameters;
-	typedef DL_PrivateKey_GFP_OldFormat<DL_CryptoKeys_GFP::PrivateKey> PrivateKey;
-	typedef DL_PublicKey_GFP_OldFormat<DL_CryptoKeys_GFP::PublicKey> PublicKey;
+	typedef DL_CryptoKeys_GFP::PrivateKey PrivateKey;
+	typedef DL_CryptoKeys_GFP::PublicKey PublicKey;
 };
 
-/// \class ElGamal
 /// \brief ElGamal encryption scheme with non-standard padding
 /// \since Crypto++ 1.0
 struct ElGamal

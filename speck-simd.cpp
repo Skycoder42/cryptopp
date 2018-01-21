@@ -27,10 +27,6 @@
 # define WORKAROUND_GCC_AARCH64_BUG 1
 #endif
 
-#if (CRYPTOPP_ARM_NEON_AVAILABLE)
-# include <arm_neon.h>
-#endif
-
 #if (CRYPTOPP_SSSE3_AVAILABLE)
 # include <pmmintrin.h>
 # include <tmmintrin.h>
@@ -43,6 +39,25 @@
 #if defined(__AVX512F__) && defined(__AVX512VL__)
 # define CRYPTOPP_AVX512_ROTATE 1
 # include <immintrin.h>
+#endif
+
+#if (CRYPTOPP_ARM_NEON_AVAILABLE)
+# include <arm_neon.h>
+#endif
+
+// Can't use CRYPTOPP_ARM_XXX_AVAILABLE because too many
+// compilers don't follow ACLE conventions for the include.
+#if defined(CRYPTOPP_ARM_ACLE_AVAILABLE)
+# include <stdint.h>
+# include <arm_acle.h>
+#endif
+
+// https://www.spinics.net/lists/gcchelp/msg47735.html and
+// https://www.spinics.net/lists/gcchelp/msg47749.html
+#if (CRYPTOPP_GCC_VERSION >= 40900)
+# define GCC_NO_UBSAN __attribute__ ((no_sanitize_undefined))
+#else
+# define GCC_NO_UBSAN
 #endif
 
 ANONYMOUS_NAMESPACE_BEGIN
@@ -127,7 +142,7 @@ inline void SPECK64_Enc_Block(uint32x4_t &block0, uint32x4_t &block1,
 
     x1 = Shuffle32(x1); y1 = Shuffle32(y1);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const uint32x4_t rk = vdupq_n_u32(subkeys[i]);
 
@@ -157,7 +172,7 @@ inline void SPECK64_Dec_Block(uint32x4_t &block0, uint32x4_t &block1,
 
     x1 = Shuffle32(x1); y1 = Shuffle32(y1);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const uint32x4_t rk = vdupq_n_u32(subkeys[i]);
 
@@ -195,7 +210,7 @@ inline void SPECK64_Enc_6_Blocks(uint32x4_t &block0, uint32x4_t &block1,
     x2 = Shuffle32(x2); y2 = Shuffle32(y2);
     x3 = Shuffle32(x3); y3 = Shuffle32(y3);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const uint32x4_t rk = vdupq_n_u32(subkeys[i]);
 
@@ -249,7 +264,7 @@ inline void SPECK64_Dec_6_Blocks(uint32x4_t &block0, uint32x4_t &block1,
     x2 = Shuffle32(x2); y2 = Shuffle32(y2);
     x3 = Shuffle32(x3); y3 = Shuffle32(y3);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const uint32x4_t rk = vdupq_n_u32(subkeys[i]);
 
@@ -375,7 +390,7 @@ inline void SPECK128_Enc_Block(uint64x2_t &block0, uint64x2_t &block1,
 
     x1 = Shuffle64(x1); y1 = Shuffle64(y1);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const uint64x2_t rk = vld1q_dup_u64(subkeys+i);
 
@@ -412,7 +427,7 @@ inline void SPECK128_Enc_6_Blocks(uint64x2_t &block0, uint64x2_t &block1,
     x2 = Shuffle64(x2); y2 = Shuffle64(y2);
     x3 = Shuffle64(x3); y3 = Shuffle64(y3);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const uint64x2_t rk = vld1q_dup_u64(subkeys+i);
 
@@ -458,7 +473,7 @@ inline void SPECK128_Dec_Block(uint64x2_t &block0, uint64x2_t &block1,
 
     x1 = Shuffle64(x1); y1 = Shuffle64(y1);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const uint64x2_t rk = vld1q_dup_u64(subkeys+i);
 
@@ -495,7 +510,7 @@ inline void SPECK128_Dec_6_Blocks(uint64x2_t &block0, uint64x2_t &block1,
     x2 = Shuffle64(x2); y2 = Shuffle64(y2);
     x3 = Shuffle64(x3); y3 = Shuffle64(y3);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const uint64x2_t rk = vld1q_dup_u64(subkeys+i);
 
@@ -543,6 +558,14 @@ inline void SPECK128_Dec_6_Blocks(uint64x2_t &block0, uint64x2_t &block1,
 # define CONST_M128_CAST(x) ((const __m128i *)(const void *)(x))
 #endif
 
+// GCC double casts, https://www.spinics.net/lists/gcchelp/msg47735.html
+#ifndef DOUBLE_CAST
+# define DOUBLE_CAST(x) ((double *)(void *)(x))
+#endif
+#ifndef CONST_DOUBLE_CAST
+# define CONST_DOUBLE_CAST(x) ((const double *)(const void *)(x))
+#endif
+
 #if defined(CRYPTOPP_AVX512_ROTATE)
 template <unsigned int R>
 inline __m128i RotateLeft64(const __m128i& val)
@@ -588,7 +611,7 @@ inline __m128i RotateRight64<8>(const __m128i& val)
 
 #endif  // CRYPTOPP_AVX512_ROTATE
 
-inline void SPECK128_Enc_Block(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK128_Enc_Block(__m128i &block0, __m128i &block1,
     const word64 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
@@ -602,10 +625,10 @@ inline void SPECK128_Enc_Block(__m128i &block0, __m128i &block1,
     x1 = _mm_shuffle_epi8(x1, mask);
     y1 = _mm_shuffle_epi8(y1, mask);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i)));
 
         x1 = RotateRight64<8>(x1);
         x1 = _mm_add_epi64(x1, y1);
@@ -622,7 +645,7 @@ inline void SPECK128_Enc_Block(__m128i &block0, __m128i &block1,
     block1 = _mm_unpackhi_epi64(x1, y1);
 }
 
-inline void SPECK128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word64 *subkeys, unsigned int rounds)
 {
@@ -645,10 +668,10 @@ inline void SPECK128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     x3 = _mm_shuffle_epi8(x3, mask);
     y3 = _mm_shuffle_epi8(y3, mask);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i)));
 
         x1 = RotateRight64<8>(x1);
         x2 = RotateRight64<8>(x2);
@@ -683,7 +706,7 @@ inline void SPECK128_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     block5 = _mm_unpackhi_epi64(x3, y3);
 }
 
-inline void SPECK128_Dec_Block(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK128_Dec_Block(__m128i &block0, __m128i &block1,
     const word64 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
@@ -697,10 +720,10 @@ inline void SPECK128_Dec_Block(__m128i &block0, __m128i &block1,
     x1 = _mm_shuffle_epi8(x1, mask);
     y1 = _mm_shuffle_epi8(y1, mask);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i)));
 
         y1 = _mm_xor_si128(y1, x1);
         y1 = RotateRight64<3>(y1);
@@ -717,7 +740,7 @@ inline void SPECK128_Dec_Block(__m128i &block0, __m128i &block1,
     block1 = _mm_unpackhi_epi64(x1, y1);
 }
 
-inline void SPECK128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word64 *subkeys, unsigned int rounds)
 {
@@ -740,10 +763,10 @@ inline void SPECK128_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     x3 = _mm_shuffle_epi8(x3, mask);
     y3 = _mm_shuffle_epi8(y3, mask);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const __m128i rk = _mm_castpd_si128(
-            _mm_loaddup_pd(reinterpret_cast<const double*>(subkeys+i)));
+            _mm_loaddup_pd(CONST_DOUBLE_CAST(subkeys+i)));
 
         y1 = _mm_xor_si128(y1, x1);
         y2 = _mm_xor_si128(y2, x2);
@@ -812,7 +835,7 @@ inline __m128i RotateRight32<8>(const __m128i& val)
     return _mm_shuffle_epi8(val, mask);
 }
 
-inline void SPECK64_Enc_Block(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK64_Enc_Block(__m128i &block0, __m128i &block1,
     const word32 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
@@ -829,7 +852,7 @@ inline void SPECK64_Enc_Block(__m128i &block0, __m128i &block1,
     x1 = _mm_shuffle_epi8(x1, mask);
     y1 = _mm_shuffle_epi8(y1, mask);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const __m128i rk = _mm_set1_epi32(subkeys[i]);
 
@@ -849,7 +872,7 @@ inline void SPECK64_Enc_Block(__m128i &block0, __m128i &block1,
     block1 = _mm_unpackhi_epi32(x1, y1);
 }
 
-inline void SPECK64_Dec_Block(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK64_Dec_Block(__m128i &block0, __m128i &block1,
     const word32 *subkeys, unsigned int rounds)
 {
     // Rearrange the data for vectorization. The incoming data was read from
@@ -866,7 +889,7 @@ inline void SPECK64_Dec_Block(__m128i &block0, __m128i &block1,
     x1 = _mm_shuffle_epi8(x1, mask);
     y1 = _mm_shuffle_epi8(y1, mask);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const __m128i rk = _mm_set1_epi32(subkeys[i]);
 
@@ -886,7 +909,7 @@ inline void SPECK64_Dec_Block(__m128i &block0, __m128i &block1,
     block1 = _mm_unpackhi_epi32(x1, y1);
 }
 
-inline void SPECK64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word32 *subkeys, unsigned int rounds)
 {
@@ -918,7 +941,7 @@ inline void SPECK64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     x3 = _mm_shuffle_epi8(x3, mask);
     y3 = _mm_shuffle_epi8(y3, mask);
 
-    for (size_t i=0; static_cast<int>(i)<rounds; ++i)
+    for (int i=0; i < static_cast<int>(rounds); ++i)
     {
         const __m128i rk = _mm_set1_epi32(subkeys[i]);
 
@@ -956,7 +979,7 @@ inline void SPECK64_Enc_6_Blocks(__m128i &block0, __m128i &block1,
     block5 = _mm_unpackhi_epi32(x3, y3);
 }
 
-inline void SPECK64_Dec_6_Blocks(__m128i &block0, __m128i &block1,
+inline void GCC_NO_UBSAN SPECK64_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     __m128i &block2, __m128i &block3, __m128i &block4, __m128i &block5,
     const word32 *subkeys, unsigned int rounds)
 {
@@ -988,7 +1011,7 @@ inline void SPECK64_Dec_6_Blocks(__m128i &block0, __m128i &block1,
     x3 = _mm_shuffle_epi8(x3, mask);
     y3 = _mm_shuffle_epi8(y3, mask);
 
-    for (size_t i=rounds-1; static_cast<int>(i)>=0; --i)
+    for (int i = static_cast<int>(rounds-1); i >= 0; --i)
     {
         const __m128i rk = _mm_set1_epi32(subkeys[i]);
 
@@ -1040,14 +1063,14 @@ NAMESPACE_BEGIN(CryptoPP)
 size_t SPECK64_Enc_AdvancedProcessBlocks_NEON(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_NEON2x6(SPECK64_Enc_Block, SPECK64_Enc_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_NEON(SPECK64_Enc_Block, SPECK64_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SPECK64_Dec_AdvancedProcessBlocks_NEON(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_NEON2x6(SPECK64_Dec_Block, SPECK64_Dec_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_NEON(SPECK64_Dec_Block, SPECK64_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif
@@ -1056,14 +1079,14 @@ size_t SPECK64_Dec_AdvancedProcessBlocks_NEON(const word32* subKeys, size_t roun
 size_t SPECK128_Enc_AdvancedProcessBlocks_NEON(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_NEON2x6(SPECK128_Enc_Block, SPECK128_Enc_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_NEON(SPECK128_Enc_Block, SPECK128_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SPECK128_Dec_AdvancedProcessBlocks_NEON(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_NEON2x6(SPECK128_Dec_Block, SPECK128_Dec_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_NEON(SPECK128_Dec_Block, SPECK128_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif  // CRYPTOPP_ARM_NEON_AVAILABLE
@@ -1074,14 +1097,14 @@ size_t SPECK128_Dec_AdvancedProcessBlocks_NEON(const word64* subKeys, size_t rou
 size_t SPECK64_Enc_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_SSE2x6(SPECK64_Enc_Block, SPECK64_Enc_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_SSE(SPECK64_Enc_Block, SPECK64_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SPECK64_Dec_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks64_SSE2x6(SPECK64_Dec_Block, SPECK64_Dec_6_Blocks,
+    return AdvancedProcessBlocks64_6x2_SSE(SPECK64_Dec_Block, SPECK64_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif
@@ -1090,14 +1113,14 @@ size_t SPECK64_Dec_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rou
 size_t SPECK128_Enc_AdvancedProcessBlocks_SSSE3(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_SSE2x6(SPECK128_Enc_Block, SPECK128_Enc_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_SSE(SPECK128_Enc_Block, SPECK128_Enc_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 
 size_t SPECK128_Dec_AdvancedProcessBlocks_SSSE3(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags)
 {
-    return AdvancedProcessBlocks128_SSE2x6(SPECK128_Dec_Block, SPECK128_Dec_6_Blocks,
+    return AdvancedProcessBlocks128_6x2_SSE(SPECK128_Dec_Block, SPECK128_Dec_6_Blocks,
         subKeys, rounds, inBlocks, xorBlocks, outBlocks, length, flags);
 }
 #endif  // CRYPTOPP_SSSE3_AVAILABLE

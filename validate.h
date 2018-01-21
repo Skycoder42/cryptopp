@@ -31,6 +31,7 @@ bool TestRDSEED();
 bool TestPadlockRNG();
 #endif
 bool ValidateBaseCode();
+bool ValidateEncoder();
 bool ValidateCRC32();
 bool ValidateCRC32C();
 bool ValidateAdler32();
@@ -106,11 +107,14 @@ bool ValidateRW();
 bool ValidateECP();
 bool ValidateEC2N();
 bool ValidateECDSA();
+bool ValidateECDSA_RFC6979();
 bool ValidateECGDSA(bool thorough);
 bool ValidateESIGN();
 
 bool ValidateHashDRBG();
 bool ValidateHmacDRBG();
+
+bool ValidateNaCl();
 
 // If CRYPTOPP_DEBUG or CRYPTOPP_COVERAGE is in effect, then perform additional tests
 #if (defined(CRYPTOPP_DEBUG) || defined(CRYPTOPP_COVERAGE) || defined(CRYPTOPP_VALGRIND)) && !defined(CRYPTOPP_IMPORTS)

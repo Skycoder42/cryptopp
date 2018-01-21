@@ -16,9 +16,12 @@
 # endif
 #endif
 
+// GCC cast warning
+#define HashWordPtr(x) ((HashWordType*)(void*)(x))
+#define ConstHashWordPtr(x) ((const HashWordType*)(const void*)(x))
+
 NAMESPACE_BEGIN(CryptoPP)
 
-/// \class HashInputTooLong
 /// \brief Exception thrown when trying to hash more data than is allowed by a hash function
 class CRYPTOPP_DLL HashInputTooLong : public InvalidDataFormat
 {
@@ -27,7 +30,6 @@ public:
 		: InvalidDataFormat("IteratedHashBase: input data exceeds maximum allowed by hash function " + alg) {}
 };
 
-/// \class IteratedHashBase
 /// \brief Iterated hash base class
 /// \tparam T Hash word type
 /// \tparam BASE HashTransformation derived class
@@ -99,7 +101,6 @@ private:
 	T m_countLo, m_countHi;
 };
 
-/// \class IteratedHash
 /// \brief Iterated hash base class
 /// \tparam T_HashWordType Hash word type
 /// \tparam T_Endianness Endianness type of hash
@@ -146,7 +147,6 @@ protected:
 	FixedSizeSecBlock<T_HashWordType, T_BlockSize/sizeof(T_HashWordType)> m_data;
 };
 
-/// \class IteratedHashWithStaticTransform
 /// \brief Iterated hash with a static transformation function
 /// \tparam T_HashWordType Hash word type
 /// \tparam T_Endianness Endianness type of hash

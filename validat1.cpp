@@ -104,8 +104,11 @@ bool ValidateAll(bool thorough)
 	pass=TestHuffmanCodes() && pass;
 	// http://github.com/weidai11/cryptopp/issues/346
 	pass=TestASN1Parse() && pass;
-	// Additional tests due to no coverage
+	// Always part of the self tests; call in Debug
 	pass=ValidateBaseCode() && pass;
+	// https://github.com/weidai11/cryptopp/issues/562
+	pass=ValidateEncoder() && pass;
+	// Additional tests due to no coverage
 	pass=TestCompressors() && pass;
 	pass=TestSharing() && pass;
 	pass=TestEncryptors() && pass;
@@ -201,8 +204,11 @@ bool ValidateAll(bool thorough)
 	pass=ValidateECP() && pass;
 	pass=ValidateEC2N() && pass;
 	pass=ValidateECDSA() && pass;
+	pass=ValidateECDSA_RFC6979() && pass;
 	pass=ValidateECGDSA(thorough) && pass;
 	pass=ValidateESIGN() && pass;
+
+	pass=ValidateNaCl() && pass;
 
 	if (pass)
 		std::cout << "\nAll tests passed!\n";
@@ -2076,7 +2082,7 @@ bool TestModeIV(SymmetricCipher &e, SymmetricCipher &d)
 	const int BUF_SIZE=20480U;
 	AlignedSecByteBlock plaintext(BUF_SIZE);
 
-	for (unsigned int i=1; i<20480; i*=2)
+	for (unsigned int i=1; i<BUF_SIZE; i*=2)
 	{
 		e.GetNextIV(GlobalRNG(), iv);
 		if (iv == lastIV)
@@ -2782,10 +2788,9 @@ bool ValidateSerpent()
 	std::cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
 
 	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/serpentv.dat", true, new HexDecoder);
-	bool pass = true;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(16), valdata, 5) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(24), valdata, 4) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(32), valdata, 3) && pass;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(16), valdata, 5) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(24), valdata, 4) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(32), valdata, 3) && pass3;
 	return pass1 && pass2 && pass3;
 }
 
@@ -3161,6 +3166,158 @@ bool ValidateBaseCode()
 	std::cout << (fail ? "FAILED:" : "passed:");
 	std::cout << "  Base64 URL Decoding\n";
 	pass = pass && !fail;
+
+	return pass;
+}
+
+class MyEncoder : public SimpleProxyFilter
+{
+public:
+	MyEncoder(BufferedTransformation *attachment = NULLPTR);
+	void IsolatedInitialize(const NameValuePairs &params);
+};
+
+MyEncoder::MyEncoder(BufferedTransformation *attachment)
+	: SimpleProxyFilter(new BaseN_Encoder(new Grouper), attachment)
+{
+	IsolatedInitialize(MakeParameters(Name::InsertLineBreaks(), true)(Name::MaxLineLength(), 72));
+}
+
+void MyEncoder::IsolatedInitialize(const NameValuePairs &parameters)
+{
+	bool insertLineBreaks = parameters.GetValueWithDefault(Name::InsertLineBreaks(), true);
+	int maxLineLength = parameters.GetIntValueWithDefault(Name::MaxLineLength(), 72);
+
+	const byte padding = '=';
+	const char *lineBreak = insertLineBreaks ? "\n" : "";
+
+	char stars[64];
+	memset(stars, '*', 64);
+
+	m_filter->Initialize(CombinedNameValuePairs(
+		parameters,
+		MakeParameters(Name::EncodingLookupArray(), (const byte *)&stars[0], false)
+			(Name::PaddingByte(), padding)
+			(Name::GroupSize(), insertLineBreaks ? maxLineLength : 0)
+			(Name::Separator(), ConstByteArrayParameter(lineBreak))
+			(Name::Terminator(), ConstByteArrayParameter(lineBreak))
+			(Name::Log2Base(), 6, true)));
+}
+
+class MyDecoder : public BaseN_Decoder
+{
+public:
+	MyDecoder(BufferedTransformation *attachment = NULLPTR);
+	void IsolatedInitialize(const NameValuePairs &params);
+	static const int * CRYPTOPP_API GetDecodingLookupArray();
+};
+
+MyDecoder::MyDecoder(BufferedTransformation *attachment)
+	: BaseN_Decoder(GetDecodingLookupArray(), 6, attachment)
+{
+}
+
+void MyDecoder::IsolatedInitialize(const NameValuePairs &parameters)
+{
+	BaseN_Decoder::IsolatedInitialize(CombinedNameValuePairs(
+		parameters,
+		MakeParameters(Name::DecodingLookupArray(), GetDecodingLookupArray(), false)(Name::Log2Base(), 6, true)));
+}
+
+struct MyDecoderAlphabet
+{
+	MyDecoderAlphabet() {
+		std::fill(tab, tab+COUNTOF(tab), '*');
+	}
+	byte tab[64];
+};
+
+struct MyDecoderArray
+{
+	MyDecoderArray() {
+		std::fill(tab, tab+COUNTOF(tab), -1);
+	}
+	int tab[256];
+};
+
+const int * MyDecoder::GetDecodingLookupArray()
+{
+	static bool s_initialized = false;
+	static MyDecoderAlphabet s_alpha;
+	static MyDecoderArray s_array;
+
+	MEMORY_BARRIER();
+	if (!s_initialized)
+	{
+		InitializeDecodingLookupArray(s_array.tab, s_alpha.tab, COUNTOF(s_alpha.tab), false);
+		s_initialized = true;
+		MEMORY_BARRIER();
+	}
+	return s_array.tab;
+}
+
+bool ValidateEncoder()
+{
+	// The default encoder and decoder alphabet are bogus. They are a
+	// string of '*'. To round trip a string both IsolatedInitialize
+	// must be called and work correctly.
+	std::cout << "\nCustom encoder validation running...\n\n";
+	bool pass = true;
+
+	int lookup[256];
+	const char alphabet[64+1] =
+		"AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz01234576789*";
+	const char expected[] =
+		"ILcBMSgriDicmKmTi2oENCsuJTufN0yWjL1HnS8xKdaiOkeZK3gKock1ktmlo1q4LlsNPrAyGrG0gjO2gzQ5FQ==";
+
+	MyEncoder encoder;
+	std::string str1;
+
+	AlgorithmParameters eparams = MakeParameters(Name::EncodingLookupArray(),(const byte*)alphabet)
+	                                            (Name::InsertLineBreaks(), false);
+	encoder.IsolatedInitialize(eparams);
+
+	encoder.Detach(new StringSink(str1));
+	encoder.Put((const byte*) alphabet, 64);
+	encoder.MessageEnd();
+
+	MyDecoder decoder;
+	std::string str2;
+
+	MyDecoder::InitializeDecodingLookupArray(lookup, (const byte*) alphabet, 64, false);
+	AlgorithmParameters dparams = MakeParameters(Name::DecodingLookupArray(),(const int*)lookup);
+	decoder.IsolatedInitialize(dparams);
+
+	decoder.Detach(new StringSink(str2));
+	decoder.Put((const byte*) str1.data(), str1.size());
+	decoder.MessageEnd();
+
+	pass = (str1 == std::string(expected)) && pass;
+	pass = (str2 == std::string(alphabet, 64)) && pass;
+
+	std::cout << (pass ? "passed:" : "FAILED:");
+	std::cout << "  Encode and decode\n";
+
+	// Try forcing an empty message. This is the Monero bug
+	// at https://github.com/weidai11/cryptopp/issues/562.
+	{
+		MyDecoder decoder2;
+		SecByteBlock empty;
+
+		AlgorithmParameters dparams2 = MakeParameters(Name::DecodingLookupArray(),(const int*)lookup);
+		decoder2.IsolatedInitialize(dparams2);
+
+		decoder2.Detach(new Redirector(TheBitBucket()));
+		decoder2.Put(empty.BytePtr(), empty.SizeInBytes());
+		decoder2.MessageEnd();
+
+		// Tame the optimizer
+		volatile lword size = decoder2.MaxRetrievable();
+		lword shadow = size;
+		CRYPTOPP_UNUSED(shadow);
+	}
+
+	std::cout << "passed:  0-length message\n";
 
 	return pass;
 }

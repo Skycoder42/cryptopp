@@ -30,7 +30,6 @@ NAMESPACE_BEGIN(CryptoPP)
 
 CRYPTOPP_DLL_TEMPLATE_CLASS DL_GroupParameters<Integer>;
 
-/// \class DL_GroupParameters_IntegerBased
 /// \brief Integer-based GroupParameters specialization
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE DL_GroupParameters_IntegerBased : public ASN1CryptoMaterial<DL_GroupParameters<Integer> >
 {
@@ -113,7 +112,6 @@ private:
     Integer m_q;
 };
 
-/// \class DL_GroupParameters_IntegerBasedImpl
 /// \brief Integer-based GroupParameters default implementation
 /// \tparam GROUP_PRECOMP group parameters precomputation specialization
 /// \tparam BASE_PRECOMP base class precomputation specialization
@@ -154,7 +152,6 @@ public:
 
 CRYPTOPP_DLL_TEMPLATE_CLASS DL_GroupParameters_IntegerBasedImpl<ModExpPrecomputation>;
 
-/// \class DL_GroupParameters_GFP
 /// \brief GF(p) group parameters
 class CRYPTOPP_DLL DL_GroupParameters_GFP : public DL_GroupParameters_IntegerBasedImpl<ModExpPrecomputation>
 {
@@ -179,7 +176,6 @@ protected:
     int GetFieldType() const {return 1;}
 };
 
-/// \class DL_GroupParameters_GFP
 /// \brief GF(p) group parameters that default to safe primes
 class CRYPTOPP_DLL DL_GroupParameters_GFP_DefaultSafePrime : public DL_GroupParameters_GFP
 {
@@ -192,7 +188,6 @@ protected:
     unsigned int GetDefaultSubgroupOrderSize(unsigned int modulusSize) const {return modulusSize-1;}
 };
 
-/// \class DL_Algorithm_GDSA
 /// \brief GDSA algorithm
 /// \tparam T FieldElement type or class
 template <class T>
@@ -226,7 +221,6 @@ public:
     }
 };
 
-/// \class DL_Algorithm_DSA_RFC6979
 /// \brief DSA signature algorithm based on RFC 6979
 /// \tparam T FieldElement type or class
 /// \tparam H HashTransformation derived class
@@ -332,16 +326,6 @@ public:
 
 protected:
 
-#if 0
-    // Determine bits without converting to an Integer
-    inline unsigned int BitCount(const byte* buffer, size_t size) const
-    {
-        unsigned int idx = 0;
-        while (idx < size && buffer[idx] == 0) { idx++; }
-        return (size-idx)*8 - (8-BitPrecision(buffer[idx]));
-    }
-#endif
-
     Integer bits2int(const SecByteBlock& bits, size_t qlen) const
     {
         Integer ret(bits, bits.size());
@@ -384,7 +368,7 @@ protected:
     // curve's order.
     SecByteBlock bits2octets(const SecByteBlock& in, const Integer& q) const
     {
-        Integer b2 = bits2int(in, in.size()*8);
+        Integer b2 = bits2int(in, q.BitCount());
         Integer b1 = b2 - q;
         return int2octets(b1.IsNegative() ? b2 : b1, q.ByteCount());
     }
@@ -394,7 +378,6 @@ private:
     mutable HMAC<H> m_hmac;
 };
 
-/// \class DL_Algorithm_GDSA_ISO15946
 /// \brief German Digital Signature Algorithm
 /// \tparam T FieldElement type or class
 /// \details The Digital Signature Scheme ECGDSA does not define the algorithm over integers. Rather, the
@@ -441,7 +424,6 @@ CRYPTOPP_DLL_TEMPLATE_CLASS DL_Algorithm_DSA_RFC6979<Integer, SHA256>;
 CRYPTOPP_DLL_TEMPLATE_CLASS DL_Algorithm_DSA_RFC6979<Integer, SHA384>;
 CRYPTOPP_DLL_TEMPLATE_CLASS DL_Algorithm_DSA_RFC6979<Integer, SHA512>;
 
-/// \class DL_Algorithm_NR
 /// \brief NR algorithm
 /// \tparam T FieldElement type or class
 template <class T>
@@ -471,7 +453,6 @@ public:
     }
 };
 
-/// \class DL_PublicKey_GFP
 /// \brief Discrete Log (DL) public key in GF(p) groups
 /// \tparam GP GroupParameters derived class
 /// \details DSA public key format is defined in 7.3.3 of RFC 2459. The    private key format is defined in 12.9 of PKCS #11 v2.10.
@@ -509,7 +490,6 @@ public:
         {this->GetPublicElement().DEREncode(bt);}
 };
 
-/// \class DL_PrivateKey_GFP
 /// \brief Discrete Log (DL) private key in GF(p) groups
 /// \tparam GP GroupParameters derived class
 template <class GP>
@@ -574,7 +554,6 @@ public:
 template <class GP>
 DL_PrivateKey_GFP<GP>::~DL_PrivateKey_GFP() {}
 
-/// \class DL_SignatureKeys_GFP
 /// \brief Discrete Log (DL) signing/verification keys in GF(p) groups
 struct DL_SignatureKeys_GFP
 {
@@ -583,7 +562,6 @@ struct DL_SignatureKeys_GFP
     typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
 };
 
-/// \class DL_CryptoKeys_GFP
 /// \brief Discrete Log (DL) encryption/decryption keys in GF(p) groups
 struct DL_CryptoKeys_GFP
 {
@@ -592,99 +570,6 @@ struct DL_CryptoKeys_GFP
     typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
 };
 
-/// \class DL_PublicKey_GFP_OldFormat
-/// \brief Discrete Log (DL) public key in GF(p) groups
-/// \tparam BASE GroupParameters derived class
-/// \deprecated This implementation uses a non-standard Crypto++ key format. New implementations
-///   should use DL_PublicKey_GFP and DL_PrivateKey_GFP
-template <class BASE>
-class DL_PublicKey_GFP_OldFormat : public BASE
-{
-public:
-    virtual ~DL_PublicKey_GFP_OldFormat() {}
-
-    void BERDecode(BufferedTransformation &bt)
-    {
-        BERSequenceDecoder seq(bt);
-            Integer v1(seq);
-            Integer v2(seq);
-            Integer v3(seq);
-
-            if (seq.EndReached())
-            {
-                this->AccessGroupParameters().Initialize(v1, v1/2, v2);
-                this->SetPublicElement(v3);
-            }
-            else
-            {
-                Integer v4(seq);
-                this->AccessGroupParameters().Initialize(v1, v2, v3);
-                this->SetPublicElement(v4);
-            }
-
-        seq.MessageEnd();
-    }
-
-    void DEREncode(BufferedTransformation &bt) const
-    {
-        DERSequenceEncoder seq(bt);
-            this->GetGroupParameters().GetModulus().DEREncode(seq);
-            if (this->GetGroupParameters().GetCofactor() != 2)
-                this->GetGroupParameters().GetSubgroupOrder().DEREncode(seq);
-            this->GetGroupParameters().GetGenerator().DEREncode(seq);
-            this->GetPublicElement().DEREncode(seq);
-        seq.MessageEnd();
-    }
-};
-
-/// \class DL_PrivateKey_GFP_OldFormat
-/// \brief Discrete Log (DL) private key in GF(p) groups
-/// \tparam BASE GroupParameters derived class
-/// \deprecated This implementation uses a non-standard Crypto++ key format. New implementations
-///   should use DL_PublicKey_GFP and DL_PrivateKey_GFP
-template <class BASE>
-class DL_PrivateKey_GFP_OldFormat : public BASE
-{
-public:
-    virtual ~DL_PrivateKey_GFP_OldFormat() {}
-
-    void BERDecode(BufferedTransformation &bt)
-    {
-        BERSequenceDecoder seq(bt);
-            Integer v1(seq);
-            Integer v2(seq);
-            Integer v3(seq);
-            Integer v4(seq);
-
-            if (seq.EndReached())
-            {
-                this->AccessGroupParameters().Initialize(v1, v1/2, v2);
-                this->SetPrivateExponent(v4 % (v1/2));    // some old keys may have x >= q
-            }
-            else
-            {
-                Integer v5(seq);
-                this->AccessGroupParameters().Initialize(v1, v2, v3);
-                this->SetPrivateExponent(v5);
-            }
-
-        seq.MessageEnd();
-    }
-
-    void DEREncode(BufferedTransformation &bt) const
-    {
-        DERSequenceEncoder seq(bt);
-            this->GetGroupParameters().GetModulus().DEREncode(seq);
-            if (this->GetGroupParameters().GetCofactor() != 2)
-                this->GetGroupParameters().GetSubgroupOrder().DEREncode(seq);
-            this->GetGroupParameters().GetGenerator().DEREncode(seq);
-            this->GetGroupParameters().ExponentiateBase(this->GetPrivateExponent()).DEREncode(seq);
-            this->GetPrivateExponent().DEREncode(seq);
-        seq.MessageEnd();
-    }
-};
-
-/// \class GDSA
 /// \brief DSA signature scheme
 /// \tparam H HashTransformation derived class
 /// \sa <a href="http://www.weidai.com/scan-mirror/sig.html#DSA-1363">DSA-1363</a>
@@ -698,7 +583,6 @@ struct GDSA : public DL_SS<
 {
 };
 
-/// \class NR
 /// \brief NR signature scheme
 /// \tparam H HashTransformation derived class
 /// \sa <a href="http://www.weidai.com/scan-mirror/sig.html#NR">NR</a>
@@ -711,7 +595,6 @@ struct NR : public DL_SS<
 {
 };
 
-/// \class DL_GroupParameters_DSA
 /// \brief DSA group parameters
 /// \details These are GF(p) group parameters that are allowed by the DSA standard
 /// \sa DL_Keys_DSA
@@ -735,7 +618,6 @@ public:
 template <class H>
 class DSA2;
 
-/// \class DL_Keys_DSA
 /// \brief DSA keys
 /// \sa DL_GroupParameters_DSA
 struct DL_Keys_DSA
@@ -744,7 +626,6 @@ struct DL_Keys_DSA
     typedef DL_PrivateKey_WithSignaturePairwiseConsistencyTest<DL_PrivateKey_GFP<DL_GroupParameters_DSA>, DSA2<SHA1> > PrivateKey;
 };
 
-/// \class DSA2
 /// \brief DSA signature scheme
 /// \tparam H HashTransformation derived class
 /// \details The class is named DSA2 instead of DSA for backwards compatibility because DSA was a non-template class.
@@ -762,7 +643,6 @@ public:
     static std::string CRYPTOPP_API StaticAlgorithmName() {return "DSA/" + (std::string)H::StaticAlgorithmName();}
 };
 
-/// \class DSA_RFC6979
 /// \brief DSA deterministic signature scheme
 /// \tparam H HashTransformation derived class
 /// \sa <a href="http://www.weidai.com/scan-mirror/sig.html#DSA-1363">DSA-1363</a>
@@ -785,7 +665,6 @@ CRYPTOPP_DLL_TEMPLATE_CLASS DL_PublicKey_GFP<DL_GroupParameters_DSA>;
 CRYPTOPP_DLL_TEMPLATE_CLASS DL_PrivateKey_GFP<DL_GroupParameters_DSA>;
 CRYPTOPP_DLL_TEMPLATE_CLASS DL_PrivateKey_WithSignaturePairwiseConsistencyTest<DL_PrivateKey_GFP<DL_GroupParameters_DSA>, DSA2<SHA1> >;
 
-/// \class DL_EncryptionAlgorithm_Xor
 /// \brief P1363 based XOR Encryption Method
 /// \tparam MAC MessageAuthenticationCode derived class used for MAC computation
 /// \tparam DHAES_MODE flag indicating DHAES mode
@@ -910,7 +789,6 @@ public:
     }
 };
 
-/// \class DLIES
 /// \brief Discrete Log Integrated Encryption Scheme
 /// \tparam COFACTOR_OPTION cofactor multiplication option
 /// \tparam HASH HashTransformation derived class used for key drivation and MAC computation

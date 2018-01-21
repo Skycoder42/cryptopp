@@ -158,12 +158,6 @@ public:
 	bool operator==(const ThisClass &rhs) const
 		{return this->m_groupPrecomputation.GetCurve() == rhs.m_groupPrecomputation.GetCurve() && this->m_gpc.GetBase(this->m_groupPrecomputation) == rhs.m_gpc.GetBase(rhs.m_groupPrecomputation);}
 
-	//#ifdef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY
-	//const Point& GetBasePoint() const {return this->GetSubgroupGenerator();}
-	//const Integer& GetBasePointOrder() const {return this->GetSubgroupOrder();}
-	//void LoadRecommendedParameters(const OID &oid) {Initialize(oid);}
-	//#endif
-
 protected:
 	unsigned int FieldElementLength() const {return GetCurve().GetField().MaxElementByteLength();}
 	unsigned int ExponentLength() const {return m_n.ByteCount();}
@@ -174,7 +168,6 @@ protected:
 	mutable bool m_compress, m_encodeAsOID;		// presentation details
 };
 
-/// \class DL_PublicKey_EC
 /// \brief Elliptic Curve Discrete Log (DL) public key
 /// \tparam EC elliptic curve field
 template <class EC>
@@ -206,7 +199,6 @@ public:
 	void DEREncodePublicKey(BufferedTransformation &bt) const;
 };
 
-/// \class DL_PrivateKey_EC
 /// \brief Elliptic Curve Discrete Log (DL) private key
 /// \tparam EC elliptic curve field
 template <class EC>
@@ -262,7 +254,6 @@ public:
 template<class EC>
 DL_PrivateKey_EC<EC>::~DL_PrivateKey_EC() {}
 
-/// \class ECDH
 /// \brief Elliptic Curve Diffie-Hellman
 /// \tparam EC elliptic curve field
 /// \tparam COFACTOR_OPTION cofactor multiplication option
@@ -273,7 +264,6 @@ struct ECDH
 	typedef DH_Domain<DL_GroupParameters_EC<EC>, COFACTOR_OPTION> Domain;
 };
 
-/// \class ECMQV
 /// \brief Elliptic Curve Menezes-Qu-Vanstone
 /// \tparam EC elliptic curve field
 /// \tparam COFACTOR_OPTION cofactor multiplication option
@@ -284,7 +274,6 @@ struct ECMQV
 	typedef MQV_Domain<DL_GroupParameters_EC<EC>, COFACTOR_OPTION> Domain;
 };
 
-/// \class ECHMQV
 /// \brief Hashed Elliptic Curve Menezes-Qu-Vanstone
 /// \tparam EC elliptic curve field
 /// \tparam COFACTOR_OPTION cofactor multiplication option
@@ -302,7 +291,6 @@ typedef ECHMQV< ECP, DL_GroupParameters_EC< ECP >::DefaultCofactorOption, SHA256
 typedef ECHMQV< ECP, DL_GroupParameters_EC< ECP >::DefaultCofactorOption, SHA384 >::Domain ECHMQV384;
 typedef ECHMQV< ECP, DL_GroupParameters_EC< ECP >::DefaultCofactorOption, SHA512 >::Domain ECHMQV512;
 
-/// \class ECFHMQV
 /// \brief Fully Hashed Elliptic Curve Menezes-Qu-Vanstone
 /// \tparam EC elliptic curve field
 /// \tparam COFACTOR_OPTION cofactor multiplication option
@@ -321,7 +309,6 @@ typedef ECFHMQV< ECP, DL_GroupParameters_EC< ECP >::DefaultCofactorOption, SHA25
 typedef ECFHMQV< ECP, DL_GroupParameters_EC< ECP >::DefaultCofactorOption, SHA384 >::Domain ECFHMQV384;
 typedef ECFHMQV< ECP, DL_GroupParameters_EC< ECP >::DefaultCofactorOption, SHA512 >::Domain ECFHMQV512;
 
-/// \class DL_Keys_EC
 /// \brief Elliptic Curve Discrete Log (DL) keys
 /// \tparam EC elliptic curve field
 template <class EC>
@@ -335,7 +322,6 @@ struct DL_Keys_EC
 template <class EC, class H>
 struct ECDSA;
 
-/// \class DL_Keys_ECDSA
 /// \brief Elliptic Curve DSA keys
 /// \tparam EC elliptic curve field
 template <class EC>
@@ -345,7 +331,6 @@ struct DL_Keys_ECDSA
 	typedef DL_PrivateKey_WithSignaturePairwiseConsistencyTest<DL_PrivateKey_EC<EC>, ECDSA<EC, SHA256> > PrivateKey;
 };
 
-/// \class DL_Algorithm_ECDSA
 /// \brief Elliptic Curve DSA (ECDSA) signature algorithm
 /// \tparam EC elliptic curve field
 template <class EC>
@@ -355,7 +340,6 @@ public:
   CRYPTOPP_STATIC_CONSTEXPR const char* CRYPTOPP_API StaticAlgorithmName() {return "ECDSA";}
 };
 
-/// \class DL_Algorithm_ECDSA_RFC6979
 /// \brief Elliptic Curve DSA (ECDSA) signature algorithm based on RFC 6979
 /// \tparam EC elliptic curve field
 /// \sa <a href="http://tools.ietf.org/rfc/rfc6979.txt">RFC 6979, Deterministic Usage of the
@@ -368,7 +352,6 @@ public:
   CRYPTOPP_STATIC_CONSTEXPR const char* CRYPTOPP_API StaticAlgorithmName() {return "ECDSA-RFC6979";}
 };
 
-/// \class DL_Algorithm_ECNR
 /// \brief Elliptic Curve NR (ECNR) signature algorithm
 /// \tparam EC elliptic curve field
 template <class EC>
@@ -378,7 +361,6 @@ public:
   CRYPTOPP_STATIC_CONSTEXPR const char* CRYPTOPP_API StaticAlgorithmName() {return "ECNR";}
 };
 
-/// \class ECDSA
 /// \brief Elliptic Curve DSA (ECDSA) signature scheme
 /// \tparam EC elliptic curve field
 /// \tparam H HashTransformation derived class
@@ -388,7 +370,6 @@ struct ECDSA : public DL_SS<DL_Keys_ECDSA<EC>, DL_Algorithm_ECDSA<EC>, DL_Signat
 {
 };
 
-/// \class ECDSA_RFC6979
 /// \brief Elliptic Curve DSA (ECDSA) deterministic signature scheme
 /// \tparam EC elliptic curve field
 /// \tparam H HashTransformation derived class
@@ -405,7 +386,6 @@ struct ECDSA_RFC6979 : public DL_SS<
 	static std::string CRYPTOPP_API StaticAlgorithmName() {return std::string("ECDSA-RFC6979/") + H::StaticAlgorithmName();}
 };
 
-/// \class ECNR
 /// \brief Elliptic Curve NR (ECNR) signature scheme
 /// \tparam EC elliptic curve field
 /// \tparam H HashTransformation derived class
@@ -421,7 +401,6 @@ class DL_PublicKey_ECGDSA_ISO15946;
 template <class EC>
 class DL_PrivateKey_ECGDSA_ISO15946;
 
-/// \class DL_PrivateKey_ECGDSA_ISO15946
 /// \brief Elliptic Curve German DSA key for ISO/IEC 15946
 /// \tparam EC elliptic curve field
 /// \sa ECGDSA_ISO15946
@@ -504,7 +483,6 @@ public:
 	void DEREncodePrivateKey(BufferedTransformation &bt) const;
 };
 
-/// \class DL_PublicKey_ECGDSA_ISO15946
 /// \brief Elliptic Curve German DSA key for ISO/IEC 15946
 /// \tparam EC elliptic curve field
 /// \sa ECGDSA_ISO15946
@@ -557,7 +535,6 @@ public:
 	void DEREncodePublicKey(BufferedTransformation &bt) const;
 };
 
-/// \class DL_Keys_ECGDSA_ISO15946
 /// \brief Elliptic Curve German DSA keys for ISO/IEC 15946
 /// \tparam EC elliptic curve field
 /// \sa ECGDSA_ISO15946
@@ -569,7 +546,6 @@ struct DL_Keys_ECGDSA_ISO15946
 	typedef DL_PrivateKey_ECGDSA_ISO15946<EC> PrivateKey;
 };
 
-/// \class DL_Algorithm_ECGDSA_ISO15946
 /// \brief Elliptic Curve German DSA signature algorithm
 /// \tparam EC elliptic curve field
 /// \sa ECGDSA_ISO15946
@@ -581,7 +557,6 @@ public:
   CRYPTOPP_STATIC_CONSTEXPR const char* CRYPTOPP_API StaticAlgorithmName() {return "ECGDSA";}
 };
 
-/// \class ECGDSA
 /// \brief Elliptic Curve German Digital Signature Algorithm signature scheme
 /// \tparam EC elliptic curve field
 /// \tparam H HashTransformation derived class
@@ -601,7 +576,6 @@ struct ECGDSA : public DL_SS<
 
 // ******************************************
 
-/// \class ECIES
 /// \brief Elliptic Curve Integrated Encryption Scheme
 /// \tparam COFACTOR_OPTION cofactor multiplication option
 /// \tparam HASH HashTransformation derived class used for key drivation and MAC computation

@@ -15,7 +15,6 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-/// \class ESIGNFunction
 /// \brief ESIGN trapdoor function using the public key
 /// \since Crypto++ 5.0
 class ESIGNFunction : public TrapdoorFunction, public ASN1CryptoMaterial<PublicKey>
@@ -58,7 +57,6 @@ protected:
 	Integer m_n, m_e;
 };
 
-/// \class InvertibleESIGNFunction
 /// \brief ESIGN trapdoor function using the private key
 /// \since Crypto++ 5.0
 class InvertibleESIGNFunction : public ESIGNFunction, public RandomizedTrapdoorFunctionInverse, public PrivateKey
@@ -115,7 +113,6 @@ protected:
 	Integer m_p, m_q;
 };
 
-/// \class EMSA5Pad
 /// \brief EMSA5 padding method
 /// \tparam T Mask Generation Function
 /// \since Crypto++ 5.0
@@ -142,7 +139,6 @@ public:
 	}
 };
 
-/// \class P1363_EMSA5
 /// \brief EMSA5 padding method, for use with ESIGN
 /// \since Crypto++ 5.0
 struct P1363_EMSA5 : public SignatureStandard
@@ -150,6 +146,8 @@ struct P1363_EMSA5 : public SignatureStandard
 	typedef EMSA5Pad<P1363_MGF1> SignatureMessageEncodingMethod;
 };
 
+/// \brief ESIGN keys
+/// \since Crypto++ 5.0
 struct ESIGN_Keys
 {
 	CRYPTOPP_STATIC_CONSTEXPR const char* StaticAlgorithmName() {return "ESIGN";}
@@ -157,7 +155,6 @@ struct ESIGN_Keys
 	typedef InvertibleESIGNFunction PrivateKey;
 };
 
-/// \class ESIGN
 /// \brief ESIGN signature scheme, IEEE P1363a
 /// \tparam H HashTransformation derived class
 /// \tparam STANDARD Signature encoding method

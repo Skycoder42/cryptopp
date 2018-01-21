@@ -123,6 +123,7 @@ protected:
 	Integer m_p, m_q, m_u;
 };
 
+/// \brief LUC cryptosystem
 struct LUC
 {
 	static std::string StaticAlgorithmName() {return "LUC";}
@@ -130,7 +131,7 @@ struct LUC
 	typedef InvertibleLUCFunction PrivateKey;
 };
 
-/// \brief LUC cryptosystem
+/// \brief LUC encryption scheme
 /// \tparam STANDARD signature standard
 /// \details This class is here for historical and pedagogical interest. It has no practical advantages over other
 ///   trapdoor functions and probably shouldn't	be used in production software. The discrete log based LUC schemes
@@ -208,7 +209,6 @@ private:
 	Integer m_g;
 };
 
-/// \class DL_GroupParameters_LUC
 /// \brief LUC GroupParameters specialization
 class DL_GroupParameters_LUC : public DL_GroupParameters_IntegerBasedImpl<DL_GroupPrecomputation_LUC, DL_BasePrecomputation_LUC>
 {
@@ -239,7 +239,6 @@ private:
 	int GetFieldType() const {return 2;}
 };
 
-/// \class DL_GroupParameters_LUC_DefaultSafePrime
 /// \brief GF(p) group parameters that default to safe primes
 class DL_GroupParameters_LUC_DefaultSafePrime : public DL_GroupParameters_LUC
 {
@@ -250,7 +249,6 @@ protected:
 	unsigned int GetDefaultSubgroupOrderSize(unsigned int modulusSize) const {return modulusSize-1;}
 };
 
-/// \class DL_Algorithm_LUC_HMP
 /// \brief LUC HMP signature algorithm
 class DL_Algorithm_LUC_HMP : public DL_ElgamalLikeSignatureAlgorithm<Integer>
 {
@@ -292,7 +290,6 @@ struct DL_CryptoKeys_LUC
 	typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
 };
 
-/// \class LUC-IES
 /// \brief LUC Integrated Encryption Scheme
 /// \tparam COFACTOR_OPTION cofactor multiplication option
 /// \tparam HASH HashTransformation derived class used for key drivation and MAC computation
