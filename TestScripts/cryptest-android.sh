@@ -12,7 +12,7 @@
 set +e
 
 if [ -z "${PLATFORM-}" ]; then
-	PLATFORMS=(armeabi-v7a armv7a-hard armv7a-neon aarch64 mipsel mipsel64 x86 x86_64)
+	PLATFORMS=(armeabi armeabi-v7a armv7a-hard armv7a-neon aarch64 mipsel mipsel64 x86 x86_64)
 else
 	PLATFORMS=(${PLATFORM})
 fi
