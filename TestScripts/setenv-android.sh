@@ -3,6 +3,11 @@
 # ====================================================================
 # Sets the cross compile environment for Android
 # Based upon OpenSSL's setenv-android.sh (by TH, JW, and SM).
+# Updated by Skycoder42 to the latest NDK.
+# These changes are based on the current recommendations for Android
+# for their "Unified Headers". Details can be found at:
+# https://android.googlesource.com/platform/ndk.git/+/HEAD/docs/UnifiedHeaders.md
+# https://android.googlesource.com/platform/ndk/+/master/docs/PlatformApis.md
 #
 # Crypto++ Library is copyrighted as a compilation and (as of version 5.6.2)
 # licensed under the Boost Software License 1.0, while the individual files
@@ -122,11 +127,13 @@ case "$THE_ARCH" in
 	AOSP_FLAGS="-march=armv7-a -mthumb -mfpu=vfpv3-d16 -mfloat-abi=softfp -DCRYPTOPP_DISABLE_ASM -Wl,--fix-cortex-a8 -funwind-tables -fexceptions -frtti"
 	;;
   hard|armv7a-hard|armeabi-v7a-hard)
-	TOOLCHAIN_ARCH="arm-linux-androideabi"
-	TOOLCHAIN_NAME="arm-linux-androideabi"
-	AOSP_ABI="armeabi-v7a"
-	AOSP_ARCH="arch-arm"
-	AOSP_FLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1 -march=armv7-a -mfpu=vfpv3-d16 -DCRYPTOPP_DISABLE_ASM -mfloat-abi=softfp -Wl,--fix-cortex-a8 -funwind-tables -fexceptions -frtti -Wl,--no-warn-mismatch -Wl,-lm_hard"
+    echo hard, armv7a-hard and armeabi-v7a-hard are not supported, as android uses softfloats
+    exit 1
+	#TOOLCHAIN_ARCH="arm-linux-androideabi"
+	#TOOLCHAIN_NAME="arm-linux-androideabi"
+	#AOSP_ABI="armeabi-v7a"
+	#AOSP_ARCH="arch-arm"
+	#AOSP_FLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1 -march=armv7-a -mfpu=vfpv3-d16 -DCRYPTOPP_DISABLE_ASM -mfloat-abi=softfp -Wl,--fix-cortex-a8 -funwind-tables -fexceptions -frtti -Wl,--no-warn-mismatch -Wl,-lm_hard"
 	;;
   neon|armv7a-neon)
 	TOOLCHAIN_ARCH="arm-linux-androideabi"

@@ -73,10 +73,6 @@ matrix:
     - os: linux
       env:
         - BUILD_MODE=android
-        - PLATFORM=armeabi-v7a-hard
-    - os: linux
-      env:
-        - BUILD_MODE=android
         - PLATFORM=armv7a-neon
     - os: linux
       env:
