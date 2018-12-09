@@ -472,7 +472,7 @@ ifeq ($(wildcard GNUmakefile.deps),GNUmakefile.deps)
 endif # Dependencies
 
 cpu-features.o: cpu-features.h cpu-features.c
-	$(CXX) $(strip $(CXXFLAGS) -fpermissive -c) cpu-features.c
+	$(CC) $(strip $(CXXFLAGS) -fpermissive -c) cpu-features.c
 
 # SSE4.2 or NEON available
 aria-simd.o : aria-simd.cpp

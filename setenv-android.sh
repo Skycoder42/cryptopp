@@ -222,10 +222,10 @@ if [ -z "$AOSP_TOOLCHAIN_PATH" ] || [ ! -d "$AOSP_TOOLCHAIN_PATH" ]; then
 fi
 
 # Error checking
-if [ ! -e "$AOSP_TOOLCHAIN_PATH/$CPP" ]; then
-	echo "ERROR: Failed to find Android cpp. Please edit this script."
-	[ "$0" = "$BASH_SOURCE" ] && exit 1 || return 1
-fi
+#if [ ! -e "$AOSP_TOOLCHAIN_PATH/$CPP" ]; then
+#	echo "ERROR: Failed to find Android cpp. Please edit this script."
+#	[ "$0" = "$BASH_SOURCE" ] && exit 1 || return 1
+#fi
 
 # Error checking
 if [ ! -e "$AOSP_TOOLCHAIN_PATH/$CC" ]; then
